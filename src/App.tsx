@@ -19,16 +19,8 @@ import {
   LOCAL_CLASSIFIER_KEYWORDS, 
   getLocalizedCategories
 } from './mockData';
-import { STATES_AND_DISTRICTS } from './statesAndDistricts';
-
-const getStateForDistrict = (dist: string): string => {
-  for (const [state, districts] of Object.entries(STATES_AND_DISTRICTS)) {
-    if (districts.includes(dist)) {
-      return state;
-    }
-  }
-  return 'Assam';
-};
+import { getStateForDistrict } from './statesAndDistricts';
+import { authService, complaintService, notificationService } from './services';
 
 const adjustComplaintsForUser = (initialComplaints: Complaint[], district: string, state: string): Complaint[] => {
   return initialComplaints.map(c => {
@@ -69,23 +61,28 @@ import { Mic, MicOff, HelpCircle } from 'lucide-react';
 import { Parallelogram } from './components/Parallelogram';
 
 function App() {
-  // Global States (synchronized with localStorage for full backend-like behavior)
+  // Global States (synchronized with authService & local cache)
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('samadhan_user');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.mobile === '8837000452' || parsed.mobile === '9876543210') {
-        parsed.name = 'Riya';
-        parsed.state = 'Karnataka';
-        parsed.district = 'Bangalore Urban';
-        parsed.residence = 'House 42, 5th Cross, Indiranagar';
-        parsed.pincode = '560038';
-        localStorage.setItem('samadhan_user', JSON.stringify(parsed));
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
       }
-      return parsed;
     }
     return null;
   });
+
+  // Keep session synchronized with Supabase Auth state changes
+  useEffect(() => {
+    const unsubscribe = authService.onAuthStateChange((authenticatedProfile) => {
+      setUser(authenticatedProfile);
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
 
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     const saved = localStorage.getItem('samadhan_complaints');
@@ -297,7 +294,8 @@ function App() {
   };
 
   // Auth logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.signOut();
     setUser(null);
     navigateTo('');
   };
@@ -314,41 +312,29 @@ function App() {
   };
 
   // Final ticket generation
-  const handleFinalSubmit = (overrideData?: Partial<Complaint>) => {
-    const randomIdNum = Math.floor(100 + Math.random() * 900);
-    const grievanceId = `GRV-2026-00${randomIdNum}`;
+  const handleFinalSubmit = async (overrideData?: Partial<Complaint>) => {
     const mergedComplaint = { ...draftComplaint, ...overrideData };
-
     const dept = mergedComplaint.responsibleDepartment || 'District Administration';
 
-    const newTimeline = [
-      { title: 'Complaint submitted', description: 'Complaint successfully filed by citizen.', date: new Date().toISOString().split('T')[0], status: 'completed' as const },
-      { title: 'Assigned to authority', description: `Assigned to ${dept}.`, date: new Date().toISOString().split('T')[0], status: 'current' as const },
-      { title: 'Site inspection', description: 'Pending officer site deployment.', date: '', status: 'upcoming' as const }
-    ];
-
-    const finalComplaint: Complaint = {
-      ...(mergedComplaint as Complaint),
-      id: grievanceId,
-      userId: 'demo-user',
-      status: 'In Progress',
-      dateSubmitted: new Date().toISOString().split('T')[0],
-      timeline: newTimeline,
-      citizenVerification: 'None',
-      affectedCitizenCount: mergedComplaint.affectedCitizenCount || 1,
+    const created = await complaintService.createComplaint({
+      ...mergedComplaint,
       responsibleDepartment: dept
-    };
+    });
 
-    setComplaints(prev => [finalComplaint, ...prev]);
-    handleAddNotification(
+    setComplaints(prev => [created, ...prev.filter(c => c.id !== created.id)]);
+    
+    await notificationService.createNotification(
       'Complaint Submitted Successfully',
-      `Your complaint ${grievanceId} is filed and routed to the ${dept}.`,
-      grievanceId
+      `Your complaint ${created.id} is filed and routed to the ${dept}.`,
+      created.id
     );
 
+    const updatedNotifs = await notificationService.fetchNotifications();
+    setNotifications(updatedNotifs);
+
     // Save active reference for success screen redirect
-    setActiveComplaintId(grievanceId);
-    navigateTo(`success/${grievanceId}`);
+    setActiveComplaintId(created.id);
+    navigateTo(`success/${created.id}`);
   };
 
   // View Switcher (Custom Client-side router)
@@ -661,6 +647,7 @@ function App() {
       {/* Onboarding Tour spotlight overlay (Triggers on first Home visit) */}
       {user && !user.onboardingCompleted && currentRoute === 'home' && (
         <OnboardingTour
+          language={language}
           onComplete={() => {
             setUser(prev => prev ? { ...prev, onboardingCompleted: true } : null);
           }}

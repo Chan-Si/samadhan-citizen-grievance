@@ -3,7 +3,7 @@ import { User, Phone, Mail, MapPin, Globe, Shield, RefreshCw, LogOut, CheckCircl
 import type { UserProfile, Language } from '../types';
 import { Parallelogram } from '../components/Parallelogram';
 import { CustomSelect } from '../components/CustomSelect';
-import { STATES_AND_DISTRICTS } from '../statesAndDistricts';
+import { STATES_AND_DISTRICTS, getStateForDistrict } from '../statesAndDistricts';
 
 interface ProfileViewProps {
   user: UserProfile;
@@ -28,9 +28,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Infer user state dynamically from their district
-  const userState = Object.keys(STATES_AND_DISTRICTS).find(st => 
-    STATES_AND_DISTRICTS[st].includes(user.district)
-  ) || 'Assam';
+  const userState = user.state || getStateForDistrict(user.district);
 
   // Mock Notification settings
   const [smsAlerts, setSmsAlerts] = useState(true);
@@ -38,13 +36,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const updatedState = getStateForDistrict(district);
     setUser(prev => {
       if (!prev) return null;
       return {
         ...prev,
         name,
         email: email || undefined,
-        district
+        district,
+        state: updatedState
       };
     });
     setShowSuccess(true);

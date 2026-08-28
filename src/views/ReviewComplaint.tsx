@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, CheckSquare, Edit, AlertCircle } from 'lucide-react';
 import type { Complaint, Language, UserProfile } from '../types';
+import { MediaPreview } from '../components/MediaPreview';
 
 interface ReviewComplaintProps {
   formData: Partial<Complaint>;
@@ -453,9 +454,10 @@ export const ReviewComplaint: React.FC<ReviewComplaintProps> = ({
                     height: '60px',
                     borderRadius: '8px',
                     overflow: 'hidden',
-                    border: '1px solid var(--color-border)'
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: '#1E293B'
                   }}>
-                    <img src={src} alt="Evidence preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <MediaPreview src={src} alt={`Evidence preview ${index + 1}`} />
                   </div>
                 ))}
               </div>

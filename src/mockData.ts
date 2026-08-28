@@ -1,5 +1,5 @@
 import type { Complaint, Language } from './types';
-import { STATES_AND_DISTRICTS } from './statesAndDistricts';
+import { getStateForDistrict } from './statesAndDistricts';
 
 export interface SubtopicInfo {
   id: string;
@@ -128,12 +128,12 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'CreditCardIcon',
     routingDepartment: 'Office of the District Social Welfare Officer, Kamrup Metropolitan',
     subtopics: [
-      { id: 'pension_delay', title: 'Pension Payment Delayed', description: 'Monthly pension not credited on time.', illustration: '/pension.jpg' },
-      { id: 'pension_stopped', title: 'Pension Stopped', description: 'Pension payments ceased abruptly without notice.', illustration: '/pension.jpg' },
-      { id: 'pension_incorrect', title: 'Incorrect Pension Amount', description: 'Received less amount than designated allocation.', illustration: '/pension.jpg' },
-      { id: 'pension_apply', title: 'Pension Application Problem', description: 'Difficulties/delays in registering new eligible beneficiaries.', illustration: '/pension.jpg' },
-      { id: 'benefit_delay', title: 'Government Benefit Delayed', description: 'Direct Benefit Transfers (DBT) or subsidies pending.', illustration: '/pension.jpg' },
-      { id: 'benefit_reject', title: 'Government Benefit Rejected', description: 'Arbitrary exclusion from welfare schemes.', illustration: '/pension.jpg' },
+      { id: 'pension_delay', title: 'Pension Payment Delayed', description: 'Monthly pension not credited on time.', illustration: '/pension-delayed.jpg' },
+      { id: 'pension_stopped', title: 'Pension Stopped', description: 'Pension payments ceased abruptly without notice.', illustration: '/pension-stopped.jpg' },
+      { id: 'pension_incorrect', title: 'Incorrect Pension Amount', description: 'Received less amount than designated allocation.', illustration: '/pension-incorrect-amount.jpg' },
+      { id: 'pension_apply', title: 'Pension Application Problem', description: 'Difficulties/delays in registering new eligible beneficiaries.', illustration: '/pension-application.jpg' },
+      { id: 'benefit_delay', title: 'Government Benefit Delayed', description: 'Direct Benefit Transfers (DBT) or subsidies pending.', illustration: '/benefit-delayed.jpg' },
+      { id: 'benefit_reject', title: 'Government Benefit Rejected', description: 'Arbitrary exclusion from welfare schemes.', illustration: '/benefit-rejected.jpg' },
 
       { id: 'other_pension', title: 'Other Pension/Benefit Problem', description: 'Any other problems with state-sponsored welfare programs.', illustration: '/other-public-problem.jpg' }
     ]
@@ -161,13 +161,13 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'BookOpenIcon',
     routingDepartment: 'Office of the Inspector of Schools, Kamrup District Circle',
     subtopics: [
-      { id: 'scholarship_edu', title: 'Scholarship Problem', description: 'Delayed merit-cum-means payments or application issues.', illustration: '/pension.jpg' },
-      { id: 'exam', title: 'Examination Problem', description: 'Admit card delays, exam center issues, or results discrepancies.', illustration: '/pension.jpg' },
-      { id: 'marksheet', title: 'Certificate/Marksheet Problem', description: 'Non-issuance or corrections in board results sheets.', illustration: '/pension.jpg' },
-      { id: 'admission', title: 'Admission Problem', description: 'Issues with quota allocations or seat allotments under Right to Education (RTE).', illustration: '/pension.jpg' },
-      { id: 'school_facility', title: 'Government School Facility Problem', description: 'Poor infrastructure, missing toilets, lack of clean water or desk facilities in local public schools.', illustration: '/pension.jpg' },
-      { id: 'teacher_staff', title: 'Teacher/Staff Issue', description: 'Absenteeism of teaching staff or poor education quality.', illustration: '/pension.jpg' },
-      { id: 'other_education', title: 'Other Education Problem', description: 'Any other school or board level grievances.', illustration: '/pension.jpg' }
+      { id: 'scholarship_edu', title: 'Scholarship Problem', description: 'Delayed merit-cum-means payments or application issues.', illustration: '/education-scholarship.jpg' },
+      { id: 'exam', title: 'Examination Problem', description: 'Admit card delays, exam center issues, or results discrepancies.', illustration: '/education-examination.jpg' },
+      { id: 'marksheet', title: 'Certificate/Marksheet Problem', description: 'Non-issuance or corrections in board results sheets.', illustration: '/education-certificate.jpg' },
+      { id: 'admission', title: 'Admission Problem', description: 'Issues with quota allocations or seat allotments under Right to Education (RTE).', illustration: '/education-admission.jpg' },
+      { id: 'school_facility', title: 'Government School Facility Problem', description: 'Poor infrastructure, missing toilets, lack of clean water or desk facilities in local public schools.', illustration: '/education-school-facility.jpg' },
+      { id: 'teacher_staff', title: 'Teacher/Staff Issue', description: 'Absenteeism of teaching staff or poor education quality.', illustration: '/education-teacher.jpg' },
+      { id: 'other_education', title: 'Other Education Problem', description: 'Any other school or board level grievances.', illustration: '/other-public-problem.jpg' }
     ]
   },
   {
@@ -978,12 +978,7 @@ export const getLocalizedCategories = (lang: Language): CategoryInfo[] => {
       const parsed = JSON.parse(savedUser);
       if (parsed && parsed.district) {
         district = parsed.district;
-        for (const [st, districts] of Object.entries(STATES_AND_DISTRICTS)) {
-          if (districts.includes(district)) {
-            state = st;
-            break;
-          }
-        }
+        state = parsed.state || getStateForDistrict(district);
       }
     }
   } catch (e) {
@@ -991,7 +986,7 @@ export const getLocalizedCategories = (lang: Language): CategoryInfo[] => {
   }
 
   if (!district) district = 'Kamrup Metropolitan';
-  if (!state) state = 'Assam';
+  if (!state) state = getStateForDistrict(district);
 
   const dict = CATEGORY_TRANSLATIONS[lang] || CATEGORY_TRANSLATIONS.en;
   

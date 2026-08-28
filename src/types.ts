@@ -4,6 +4,7 @@ export interface UserProfile {
   name: string;
   mobile: string;
   email?: string;
+  state?: string;
   district: string;
   preferredLanguage: Language;
   onboardingCompleted: boolean;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Navigation, AlertTriangle, Check } from 'lucide-react';
 import type { LocationData, Language } from '../types';
 import { Parallelogram } from './Parallelogram';
-import { STATES_AND_DISTRICTS } from '../statesAndDistricts';
+import { STATES_AND_DISTRICTS, getStateForDistrict } from '../statesAndDistricts';
 
 interface LocationSelectorProps {
   initialLocation?: LocationData;
@@ -167,15 +167,6 @@ const getDistrictMapData = (dist: string) => {
       };
     }
   }
-};
-
-const getStateForDistrict = (dist: string): string => {
-  for (const [state, districts] of Object.entries(STATES_AND_DISTRICTS)) {
-    if (districts.includes(dist)) {
-      return state;
-    }
-  }
-  return 'Assam';
 };
 
 const getMockLandmarks = (dist: string): Landmark[] => {

@@ -6,6 +6,8 @@ import { ResolutionVerification } from '../components/ResolutionVerification';
 import { EvidenceUploader } from '../components/EvidenceUploader';
 import { getLocalizedComplaints } from '../mockData';
 import { Parallelogram } from '../components/Parallelogram';
+import { MediaPreview } from '../components/MediaPreview';
+import { complaintService } from '../services';
 
 interface ComplaintDetailViewProps {
   complaintId: string;
@@ -54,6 +56,9 @@ export const ComplaintDetailView: React.FC<ComplaintDetailViewProps> = ({
     comment?: string,
     photo?: string
   ) => {
+    // Persist to backend / local storage via complaintService
+    complaintService.verifyResolution(comp.id, status, comment ? { comment, photo } : undefined);
+
     setComplaints(prev => prev.map(c => {
       if (c.id === comp.id) {
         let nextStatus = c.status;
@@ -271,16 +276,16 @@ export const ComplaintDetailView: React.FC<ComplaintDetailViewProps> = ({
                   <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-text-on-card-muted)', marginBottom: '0.2rem' }}>
                     {language === 'hi' ? 'पहले (दर्ज की गई)' : 'BEFORE (REPORTED)'}
                   </div>
-                  <div style={{ height: '140px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <img src={beforePhoto} alt="Before repair" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ height: '140px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: '#1E293B' }}>
+                    <MediaPreview src={beforePhoto} alt="Before repair" showControls={true} />
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#A7F3D0', marginBottom: '0.2rem' }}>
                     {language === 'hi' ? 'बाद में (विभाग कार्रवाई)' : 'AFTER (DEPARTMENT ACTION)'}
                   </div>
-                  <div style={{ height: '140px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <img src={afterPhoto} alt="After repair" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ height: '140px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: '#1E293B' }}>
+                    <MediaPreview src={afterPhoto} alt="After repair" showControls={true} />
                   </div>
                 </div>
               </div>
@@ -426,8 +431,8 @@ export const ComplaintDetailView: React.FC<ComplaintDetailViewProps> = ({
             </span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {comp.evidence.map((src, index) => (
-                <div key={index} style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                  <img src={src} alt="Evidence" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div key={index} style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.2)', backgroundColor: '#1E293B' }}>
+                  <MediaPreview src={src} alt={`Evidence ${index + 1}`} />
                 </div>
               ))}
             </div>
