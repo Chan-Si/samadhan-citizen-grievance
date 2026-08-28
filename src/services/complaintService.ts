@@ -177,7 +177,7 @@ export const complaintService = {
 
     return {
       id: inserted.id,
-      userId: inserted.user_id,
+      userId: inserted.user_id || undefined,
       category: inserted.category,
       subcategory: inserted.subcategory,
       description: inserted.description,

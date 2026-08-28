@@ -62,6 +62,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       complaints: {
         Row: {
@@ -166,6 +167,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       complaint_evidence: {
         Row: {
@@ -195,6 +197,7 @@ export interface Database {
           file_type?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       complaint_timeline_events: {
         Row: {
@@ -227,6 +230,7 @@ export interface Database {
           sequence_order?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
       complaint_supporters: {
         Row: {
@@ -253,6 +257,7 @@ export interface Database {
           address?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -282,6 +287,7 @@ export interface Database {
           is_read?: boolean;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {
@@ -304,6 +310,9 @@ export interface Database {
       complaint_severity: ComplaintSeverity;
       location_source: LocationSource;
       timeline_status: TimelineStatus;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }
