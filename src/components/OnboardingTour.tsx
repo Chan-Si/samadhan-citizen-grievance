@@ -53,7 +53,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
     }
   ];
 
-  const [coords, setCoords] = useState<{ top: number; left: number; placement: 'top' | 'bottom' | 'center' }>({ top: 0, left: 0, placement: 'center' });
   const currentStepData = steps[currentStep];
 
   useEffect(() => {
@@ -71,49 +70,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       target.classList.add('tour-highlight');
-
-      const updatePosition = () => {
-        const rect = target.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
-        const tooltipWidth = Math.min(420, viewportWidth - 32);
-        
-        let placement: 'top' | 'bottom' | 'center' = 'bottom';
-        let top = rect.bottom + 16;
-        let left = Math.max(16, Math.min(viewportWidth - tooltipWidth - 16, rect.left + (rect.width - tooltipWidth) / 2));
-        
-        const spaceBelow = viewportHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        
-        if (spaceBelow < 220 && spaceAbove > 220) {
-          top = Math.max(16, rect.top - 180);
-          placement = 'top';
-        } else if (spaceBelow < 220 && spaceAbove < 220) {
-          top = (viewportHeight - 200) / 2;
-          left = (viewportWidth - tooltipWidth) / 2;
-          placement = 'center';
-        }
-        
-        setCoords({ top, left, placement });
-      };
-
-      // Delay slightly for scrolling/transition to settle
-      const timeoutId = setTimeout(updatePosition, 150);
-      window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', updatePosition, true);
-
-      return () => {
-        clearTimeout(timeoutId);
-        window.removeEventListener('resize', updatePosition);
-        window.removeEventListener('scroll', updatePosition, true);
-      };
-    } else {
-      // Center fallback
-      setCoords({
-        top: window.innerHeight - 240,
-        left: (window.innerWidth - Math.min(420, window.innerWidth - 32)) / 2,
-        placement: 'center'
-      });
     }
   }, [currentStep, currentStepData.targetId]);
 
@@ -157,22 +113,17 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
     <div style={{
       position: 'fixed',
       inset: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+      backgroundColor: 'rgba(0, 0, 0, 0.25)',
       zIndex: 1000,
-      pointerEvents: 'none'
+      display: 'flex',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      padding: '1.5rem',
+      pointerEvents: 'none' /* Let users click items? No, overlay blocks clicks to focus on tour */
     }}>
       <div 
-        style={{ 
-          position: 'fixed',
-          top: `${coords.top}px`,
-          left: `${coords.left}px`,
-          width: 'calc(100% - 32px)',
-          maxWidth: '420px',
-          pointerEvents: 'auto',
-          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          zIndex: 1001
-        }}
-        className={`animate-fade-in tour-tooltip-arrow-${coords.placement}`}
+        style={{ pointerEvents: 'auto', width: '100%', maxWidth: '480px' }}
+        className="animate-fade-in"
       >
         <Parallelogram
           wrapperClassName="card-wrapper"
@@ -181,7 +132,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
             border: '2px solid var(--color-primary)',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15)',
             padding: '1.5rem',
-            position: 'relative'
           }}
         >
           {/* Header */}
@@ -213,7 +163,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
           </div>
 
           {/* Title & Body */}
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-text-main)' }}>
+          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <HelpCircle size={20} style={{ color: 'var(--color-primary)' }} />
             {currentStepData.title}
           </h3>
@@ -288,7 +238,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
         .tour-highlight {
           position: relative !important;
           z-index: 999 !important;
-          outline: 3px solid #D97706 !important;
+          outline: 3px solid #D97706 !important; /* Pulse amber outline */
           outline-offset: 4px;
           animation: pulseHighlight 1.5s infinite;
           box-shadow: 0 0 15px rgba(217, 119, 6, 0.4) !important;
@@ -298,28 +248,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
           0% { outline-color: rgba(217, 119, 6, 1); }
           50% { outline-color: rgba(217, 119, 6, 0.3); }
           100% { outline-color: rgba(217, 119, 6, 1); }
-        }
-        .tour-tooltip-arrow-bottom::after {
-          content: "";
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          border-width: 8px;
-          border-style: solid;
-          border-color: transparent transparent var(--color-primary) transparent;
-          z-index: 1002;
-        }
-        .tour-tooltip-arrow-top::after {
-          content: "";
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          border-width: 8px;
-          border-style: solid;
-          border-color: var(--color-primary) transparent transparent transparent;
-          z-index: 1002;
         }
       `}</style>
     </div>
