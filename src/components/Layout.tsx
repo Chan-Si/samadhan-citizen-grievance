@@ -181,37 +181,41 @@ export const Layout: React.FC<LayoutProps> = ({
                   </div>
                 </Parallelogram>
 
-                <Parallelogram 
-                  onClick={() => setCurrentRoute('my-complaints')}
-                  wrapperClassName="nav-parallelogram"
-                  style={{
-                    background: currentRoute === 'my-complaints' ? 'var(--color-primary-light)' : 'transparent',
-                    border: currentRoute === 'my-complaints' ? '1px solid var(--color-primary)' : '1px solid transparent',
-                    cursor: 'pointer',
-                    padding: '0.5rem 1rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
-                    <ClipboardList size={16} />
-                    <span>{t.myComplaints}</span>
-                  </div>
-                </Parallelogram>
+                <div id="nav-my-complaints">
+                  <Parallelogram 
+                    onClick={() => setCurrentRoute('my-complaints')}
+                    wrapperClassName="nav-parallelogram"
+                    style={{
+                      background: currentRoute === 'my-complaints' ? 'var(--color-primary-light)' : 'transparent',
+                      border: currentRoute === 'my-complaints' ? '1px solid var(--color-primary)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      padding: '0.5rem 1rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
+                      <ClipboardList size={16} />
+                      <span>{t.myComplaints}</span>
+                    </div>
+                  </Parallelogram>
+                </div>
 
-                <Parallelogram 
-                  onClick={() => setCurrentRoute('profile')}
-                  wrapperClassName="nav-parallelogram"
-                  style={{
-                    background: currentRoute === 'profile' ? 'var(--color-primary-light)' : 'transparent',
-                    border: currentRoute === 'profile' ? '1px solid var(--color-primary)' : '1px solid transparent',
-                    cursor: 'pointer',
-                    padding: '0.5rem 1rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
-                    <User size={16} />
-                    <span>{t.profile}</span>
-                  </div>
-                </Parallelogram>
+                <div id="profile-settings-info">
+                  <Parallelogram 
+                    onClick={() => setCurrentRoute('profile')}
+                    wrapperClassName="nav-parallelogram"
+                    style={{
+                      background: currentRoute === 'profile' ? 'var(--color-primary-light)' : 'transparent',
+                      border: currentRoute === 'profile' ? '1px solid var(--color-primary)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      padding: '0.5rem 1rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem' }}>
+                      <User size={16} />
+                      <span>{t.profile}</span>
+                    </div>
+                  </Parallelogram>
+                </div>
               </div>
 
               {/* Notification icon */}

@@ -64,6 +64,7 @@ export const STATES_AND_DISTRICTS: Record<string, string[]> = {
   ],
   'Karnataka': [
     'Bagalkot', 'Ballari', 'Belagavi', 'Bengaluru Rural', 'Bengaluru Urban', 
+    'Bangalore Urban', 'Bangalore Rural', 'Bangalore', 'Bengaluru',
     'Bidar', 'Chamarajanagar', 'Chikkaballapur', 'Chikkamagaluru', 
     'Chitradurga', 'Dakshina Kannada', 'Davanagere', 'Dharwad', 'Gadag', 
     'Hassan', 'Haveri', 'Kalaburagi', 'Kodagu', 'Kolar', 'Koppal', 
@@ -220,3 +221,56 @@ export const STATES_AND_DISTRICTS: Record<string, string[]> = {
     'Karaikal', 'Mahe', 'Puducherry', 'Yanam'
   ]
 };
+
+export const getStateForDistrict = (dist: string): string => {
+  if (!dist) return 'Assam';
+  const cleanDist = dist.trim().toLowerCase();
+
+  // Explicit city/district aliases to avoid cross-state mixups
+  if (cleanDist.includes('bangalore') || cleanDist.includes('bengaluru')) {
+    return 'Karnataka';
+  }
+  if (cleanDist.includes('chennai') || cleanDist.includes('madras')) {
+    return 'Tamil Nadu';
+  }
+  if (cleanDist.includes('mumbai') || cleanDist.includes('bombay') || cleanDist.includes('pune')) {
+    return 'Maharashtra';
+  }
+  if (cleanDist.includes('kolkata') || cleanDist.includes('calcutta')) {
+    return 'West Bengal';
+  }
+  if (cleanDist.includes('delhi')) {
+    return 'Delhi';
+  }
+  if (cleanDist.includes('hyderabad')) {
+    return 'Telangana';
+  }
+  if (
+    cleanDist.includes('kamrup') || 
+    cleanDist.includes('guwahati') || 
+    cleanDist.includes('dispur') || 
+    cleanDist.includes('jorhat') || 
+    cleanDist.includes('dibrugarh') || 
+    cleanDist.includes('silchar') || 
+    cleanDist.includes('cachar')
+  ) {
+    return 'Assam';
+  }
+
+  // Exact matching in STATES_AND_DISTRICTS
+  for (const [state, districts] of Object.entries(STATES_AND_DISTRICTS)) {
+    if (districts.some(d => d.toLowerCase() === cleanDist)) {
+      return state;
+    }
+  }
+
+  // Partial substring matching in STATES_AND_DISTRICTS
+  for (const [state, districts] of Object.entries(STATES_AND_DISTRICTS)) {
+    if (districts.some(d => cleanDist.includes(d.toLowerCase()) || d.toLowerCase().includes(cleanDist))) {
+      return state;
+    }
+  }
+
+  return 'Assam';
+};
+

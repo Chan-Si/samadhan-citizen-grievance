@@ -11,6 +11,7 @@ interface LoginProps {
 }
 
 import { STATES_AND_DISTRICTS } from '../statesAndDistricts';
+import { authService } from '../services';
 
 const LOCALIZED_STATES: Record<Language, Record<string, string>> = {
   en: {
@@ -388,22 +389,12 @@ export const Login: React.FC<LoginProps> = ({ language, setLanguage, onLoginSucc
     }
   }, [state]);
 
-  const handleDemoLogin = () => {
-    const demoProfile: UserProfile = {
-      name: 'Riya',
-      mobile: '9876543210',
-      email: 'riya@example.com',
-      district: 'Bangalore Urban',
-      preferredLanguage: language,
-      onboardingCompleted: false,
-      residence: 'House 42, 5th Cross, Indiranagar',
-      landmark: 'Near State Bank',
-      pincode: '560038'
-    };
+  const handleDemoLogin = async () => {
+    const demoProfile = await authService.signInDemoUser(language);
     onLoginSuccess(demoProfile);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -437,38 +428,11 @@ export const Login: React.FC<LoginProps> = ({ language, setLanguage, onLoginSucc
       return;
     }
 
-    // Save to local accounts database
-    try {
-      const existingAccountsStr = localStorage.getItem('samadhan_accounts');
-      const accounts = existingAccountsStr ? JSON.parse(existingAccountsStr) : [];
-      
-      // Check if account already exists
-      const exists = accounts.some((acc: any) => acc.mobile === mobile);
-      if (exists) {
-        setFormError(language === 'hi' ? 'इस मोबाइल नंबर के साथ एक खाता पहले से मौजूद है।' : 'An account with this mobile number already exists.');
-        return;
-      }
-
-      accounts.push({
-        name,
-        mobile,
-        email,
-        state,
-        district,
-        residence,
-        landmark,
-        pincode,
-        password // Store password safely in mockup DB
-      });
-      localStorage.setItem('samadhan_accounts', JSON.stringify(accounts));
-    } catch (err) {
-      console.error(err);
-    }
-
     const profile: UserProfile = {
       name,
       mobile,
       email: email || undefined,
+      state,
       district,
       preferredLanguage: language,
       onboardingCompleted: false,
@@ -477,10 +441,21 @@ export const Login: React.FC<LoginProps> = ({ language, setLanguage, onLoginSucc
       pincode
     };
 
-    onLoginSuccess(profile);
+    try {
+      const { user: registeredUser, error: regError } = await authService.signUp(profile, password);
+      if (regError) {
+        setFormError(regError);
+        return;
+      }
+      onLoginSuccess(registeredUser || profile);
+    } finally {
+      // Clear sensitive password inputs from memory
+      setPassword('');
+      setConfirmPassword('');
+    }
   };
 
-  const handleSignInSubmit = (e: React.FormEvent) => {
+  const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -489,90 +464,16 @@ export const Login: React.FC<LoginProps> = ({ language, setLanguage, onLoginSucc
       return;
     }
 
-    if (signInMobile === '9876543210') {
-      if (signInPassword !== '123456') {
-        setFormError(language === 'hi' ? 'गलत पासवर्ड। कृपया 123456 दर्ज करें।' : 'Incorrect password. Please enter 123456 for the demo account.');
+    try {
+      const { user: authUser, error: authError } = await authService.signInWithPassword(signInMobile, signInPassword);
+      if (authError || !authUser) {
+        setFormError(authError || (language === 'hi' ? 'लॉगिन विफल रहा।' : 'Sign in failed. Please check your credentials.'));
         return;
       }
-      const demoProfile: UserProfile = {
-        name: 'Riya',
-        mobile: '9876543210',
-        email: 'riya@example.com',
-        district: 'Bangalore Urban',
-        preferredLanguage: language,
-        onboardingCompleted: true,
-        residence: 'House 42, 5th Cross, Indiranagar',
-        landmark: 'Near State Bank',
-        pincode: '560038'
-      };
-      onLoginSuccess(demoProfile);
-    } else {
-      try {
-        const existingAccountsStr = localStorage.getItem('samadhan_accounts');
-        let accounts = [];
-        try {
-          accounts = existingAccountsStr ? JSON.parse(existingAccountsStr) : [];
-          if (!Array.isArray(accounts)) accounts = [];
-        } catch (err) {
-          accounts = [];
-        }
-
-        // Seed default testing account for 8837000452
-        const seedMobile = '8837000452';
-        
-        // Remove existing duplicate seeds to force-update name and location
-        accounts = accounts.filter((acc: any) => acc.mobile !== seedMobile);
-
-        accounts.push({
-          name: 'Riya',
-          mobile: seedMobile,
-          email: 'riya@example.com',
-          state: 'Karnataka',
-          district: 'Bangalore Urban',
-          residence: 'House 42, 5th Cross, Indiranagar',
-          pincode: '560038',
-          password: '12345'
-        });
-        accounts.push({
-          name: 'Riya',
-          mobile: seedMobile,
-          email: 'riya@example.com',
-          state: 'Karnataka',
-          district: 'Bangalore Urban',
-          residence: 'House 42, 5th Cross, Indiranagar',
-          pincode: '560038',
-          password: 'password123'
-        });
-        localStorage.setItem('samadhan_accounts', JSON.stringify(accounts));
-
-        const matchedAccount = accounts.find((acc: any) => acc.mobile === signInMobile && acc.password === signInPassword);
-        
-        if (!matchedAccount) {
-          const mobileExists = accounts.some((acc: any) => acc.mobile === signInMobile);
-          if (mobileExists) {
-            setFormError(language === 'hi' ? 'गलत पासवर्ड। कृपया पुनः प्रयास करें।' : 'Incorrect password. Please try again.');
-          } else {
-            setFormError(language === 'hi' ? 'मोबाइल नंबर पंजीकृत नहीं है।' : 'Mobile number not registered. Please create an account.');
-          }
-          return;
-        }
-
-        const profile: UserProfile = {
-          name: matchedAccount.name,
-          mobile: matchedAccount.mobile,
-          email: matchedAccount.email || undefined,
-          district: matchedAccount.district,
-          preferredLanguage: language,
-          onboardingCompleted: true,
-          residence: matchedAccount.residence,
-          landmark: matchedAccount.landmark || undefined,
-          pincode: matchedAccount.pincode
-        };
-        onLoginSuccess(profile);
-      } catch (err) {
-        console.error(err);
-        setFormError(language === 'hi' ? 'लॉगिन के दौरान त्रुटि हुई।' : 'An error occurred during sign in.');
-      }
+      onLoginSuccess(authUser);
+    } finally {
+      // Clear password from memory
+      setSignInPassword('');
     }
   };
 

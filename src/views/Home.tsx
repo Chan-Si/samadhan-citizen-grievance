@@ -9,6 +9,7 @@ import {
 } from '../mockData';
 import { Parallelogram } from '../components/Parallelogram';
 import { LocationSelector } from '../components/LocationSelector';
+import { complaintService } from '../services';
 
 const HINDI_DISTRICTS: Record<string, string> = {
   'Guwahati': 'गुवाहाटी',
@@ -188,11 +189,15 @@ export const Home: React.FC<HomeProps> = ({
   useEffect(() => {
     if (topComplaints.length <= 1) return;
     const interval = setInterval(() => {
+      // Pause carousel if user is actively in the onboarding tour
+      if (document.querySelector('.tour-highlight') || !user?.onboardingCompleted) {
+        return;
+      }
       setIsTransitionActive(true);
       setCarouselIndex(prev => prev + 1);
     }, 3000);
     return () => clearInterval(interval);
-  }, [topComplaints.length]);
+  }, [topComplaints.length, user?.onboardingCompleted]);
 
   // Dynamic initialization of carousel index in the middle clone (Point 9)
   useEffect(() => {
@@ -222,6 +227,8 @@ export const Home: React.FC<HomeProps> = ({
 
   const handleConfirmFacing = () => {
     if (!activeFacingModal) return;
+
+    complaintService.joinComplaint(activeFacingModal.id, facingNote, facingLocation?.address);
 
     setComplaints(prev => prev.map(c => {
       if (c.id === activeFacingModal.id) {
@@ -387,7 +394,11 @@ export const Home: React.FC<HomeProps> = ({
                     </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.2rem' }}>
-                    <span className="status-badge" style={{ backgroundColor: theme.badgeBg, color: theme.badgeText, borderColor: theme.border }}>
+                    <span 
+                      id={isCenter ? 'complaint-status-filters-info' : undefined}
+                      className="status-badge" 
+                      style={{ backgroundColor: theme.badgeBg, color: theme.badgeText, borderColor: theme.border }}
+                    >
                       {
                         language === 'hi' ? (comp.status === 'Resolved' ? 'हल किया गया' : comp.status === 'Needs Attention' ? 'ध्यान दें' : 'प्रगति में') :
                         language === 'as' ? (comp.status === 'Resolved' ? 'সমাধান হৈছে' : comp.status === 'Needs Attention' ? 'মনোযোগৰ প্ৰয়োজন' : 'প্ৰক্ৰিয়াধীন') :

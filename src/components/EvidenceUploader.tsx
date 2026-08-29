@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
-import { Camera, Upload, Trash2, X, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Upload, Trash2, X, RefreshCw, AlertCircle } from 'lucide-react';
 import { Parallelogram } from './Parallelogram';
+import { MediaPreview } from './MediaPreview';
+import { storageService } from '../services';
+import { validateMediaFile, fileToDataUrl, MAX_EVIDENCE_FILES } from '../utils/mediaUtils';
 
 interface EvidenceUploaderProps {
   evidence: string[];
@@ -23,49 +26,149 @@ export const EvidenceUploader: React.FC<EvidenceUploaderProps> = ({
 }) => {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Track created blob URLs for automatic revocation
+  const activeBlobUrls = useRef<Set<string>>(new Set());
+
+  // Cleanup object URLs when component unmounts
+  useEffect(() => {
+    const urls = activeBlobUrls.current;
+    return () => {
+      urls.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          console.warn('Error revoking blob URL:', e);
+        }
+      });
+      urls.clear();
+    };
+  }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    setValidationError(null);
     const fileList = Array.from(files);
-    
-    // Convert to dummy URLs for local state preview
-    const urls = fileList.map(file => URL.createObjectURL(file));
-    onChange([...evidence, ...urls]);
+
+    // 1. Check max files count
+    if (evidence.length + fileList.length > MAX_EVIDENCE_FILES) {
+      setValidationError(`You can attach up to ${MAX_EVIDENCE_FILES} evidence files in total.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // 2. Validate format and size for each file
+    const validFiles: File[] = [];
+    for (const file of fileList) {
+      const result = validateMediaFile(file);
+      if (!result.valid) {
+        setValidationError(result.error || 'Invalid file selected.');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+      validFiles.push(file);
+    }
+
+    setIsUploading(true);
+    try {
+      // If cloud storage is available, upload directly.
+      // Otherwise convert to Data URL for prototype persistence across reloads.
+      const persistentUrls = await Promise.all(
+        validFiles.map(async (file) => {
+          try {
+            return await storageService.uploadFile(file, 'grievance-evidence');
+          } catch {
+            return await fileToDataUrl(file);
+          }
+        })
+      );
+
+      // Track blob URLs if any were returned
+      persistentUrls.forEach(url => {
+        if (url.startsWith('blob:')) {
+          activeBlobUrls.current.add(url);
+        }
+      });
+
+      onChange([...evidence, ...persistentUrls]);
+    } catch (err) {
+      console.error('Evidence upload error:', err);
+      // Temporary fallback preview
+      const fallbackUrls = validFiles.map(file => {
+        const objUrl = URL.createObjectURL(file);
+        activeBlobUrls.current.add(objUrl);
+        return objUrl;
+      });
+      onChange([...evidence, ...fallbackUrls]);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const triggerUploadClick = () => {
+    setValidationError(null);
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   const handleRemovePhoto = (indexToRemove: number) => {
+    const targetUrl = evidence[indexToRemove];
+    if (targetUrl && targetUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(targetUrl);
+        activeBlobUrls.current.delete(targetUrl);
+      } catch (e) {
+        console.warn('Error revoking blob URL on remove:', e);
+      }
+    }
+
     const filtered = evidence.filter((_, idx) => idx !== indexToRemove);
     onChange(filtered);
   };
 
   const handleStartCamera = () => {
+    setValidationError(null);
     setShowCamera(true);
     setCameraLoading(true);
-    // Simulate camera starting up
     setTimeout(() => {
       setCameraLoading(false);
     }, 800);
   };
 
   const handleCapturePhoto = () => {
-    // Select mock image depending on complaint category
     const mockPhotoUrl = MOCK_PHOTOS_BY_CATEGORY[category] || MOCK_PHOTOS_BY_CATEGORY.default;
-    
     onChange([...evidence, mockPhotoUrl]);
     setShowCamera(false);
   };
 
   return (
     <div style={{ marginTop: '0.5rem' }}>
+      {/* Validation Error Alert */}
+      {validationError && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          borderRadius: '8px',
+          padding: '0.6rem 0.8rem',
+          color: '#F87171',
+          fontSize: '0.75rem',
+          marginBottom: '0.8rem'
+        }}>
+          <AlertCircle size={16} style={{ flexShrink: 0 }} />
+          <span>{validationError}</span>
+        </div>
+      )}
+
       {/* Previews Grid */}
       {evidence.length > 0 && (
         <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -79,17 +182,18 @@ export const EvidenceUploader: React.FC<EvidenceUploaderProps> = ({
                 border: '1.5px solid var(--color-border)',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                backgroundColor: '#1E293B'
               }}
             >
-              <img 
+              <MediaPreview 
                 src={src} 
                 alt={`Evidence ${index + 1}`} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
               />
               <button
                 type="button"
                 onClick={() => handleRemovePhoto(index)}
+                aria-label={`Remove evidence ${index + 1}`}
                 style={{
                   position: 'absolute',
                   top: '4px',
@@ -104,7 +208,8 @@ export const EvidenceUploader: React.FC<EvidenceUploaderProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  zIndex: 2
                 }}
               >
                 <Trash2 size={12} />
@@ -164,7 +269,9 @@ export const EvidenceUploader: React.FC<EvidenceUploaderProps> = ({
             }}
           >
             <Upload size={24} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Upload File</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+              {isUploading ? 'Uploading...' : 'Upload File'}
+            </span>
           </Parallelogram>
         </div>
       )}
