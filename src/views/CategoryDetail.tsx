@@ -31,18 +31,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   }
 
   // Get AI generated banner image path based on category ID
-  const catImage = categoryId === 'roads' ? '/pothole.jpg'
-                 : categoryId === 'electricity' ? '/power.jpg'
-                 : categoryId === 'water' ? '/drainage.jpg'
-                 : categoryId === 'waste' ? '/waste.jpg'
-                 : categoryId === 'transport' ? '/transport.jpg'
-                 : categoryId === 'gov_services' ? '/document.jpg'
-                 : categoryId === 'pension' ? '/pension.jpg'
-                 : categoryId === 'certificates' ? '/certificates.jpg'
-                 : categoryId === 'education' ? '/education.jpg'
-                 : categoryId === 'healthcare' ? '/healthcare.jpg'
-                 : categoryId === 'misconduct' ? '/misconduct.jpg'
-                 : '/document.jpg';
+  const catImage = category?.illustration || '/document.jpg';
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

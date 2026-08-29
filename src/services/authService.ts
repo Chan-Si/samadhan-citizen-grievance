@@ -143,7 +143,7 @@ export const authService = {
       state: 'Karnataka',
       district: 'Bangalore Urban',
       preferredLanguage: language,
-      onboardingCompleted: true,
+      onboardingCompleted: false, // Trigger onboarding for demo user
       residence: 'House 42, 5th Cross, Indiranagar',
       landmark: 'Near State Bank',
       pincode: '560038'
@@ -157,7 +157,7 @@ export const authService = {
         });
         if (!error && data.user) {
           const profile = await this.getUserProfile(data.user.id);
-          if (profile) return profile;
+          if (profile) return { ...profile, onboardingCompleted: false };
         }
       } catch (err) {
         console.warn('Demo login via Supabase failed, falling back to demo session:', err);

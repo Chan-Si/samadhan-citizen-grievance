@@ -16,6 +16,8 @@ interface LocationSelectorProps {
 
 const getDistrictCoordinates = (dist: string): [number, number] => {
   switch (dist) {
+    case 'Bangalore Urban':
+    case 'Bengaluru Urban': return [77.5946, 12.9716];
     case 'Kamrup Metropolitan': return [91.7761, 26.1754];
     case 'Jorhat': return [94.2026, 26.7509];
     case 'Dibrugarh': return [94.9120, 27.4728];

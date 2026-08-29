@@ -487,18 +487,7 @@ export const Home: React.FC<HomeProps> = ({
         }}>
           {localizedCategories.map(cat => {
             // Get category-specific image
-            const catImage = cat.id === 'roads' ? '/pothole.jpg'
-                           : cat.id === 'electricity' ? '/power.jpg'
-                           : cat.id === 'water' ? '/drainage.jpg'
-                           : cat.id === 'waste' ? '/waste.jpg'
-                           : cat.id === 'transport' ? '/transport.jpg'
-                           : cat.id === 'gov_services' ? '/document.jpg'
-                           : cat.id === 'pension' ? '/pension.jpg'
-                           : cat.id === 'certificates' ? '/certificates.jpg'
-                           : cat.id === 'education' ? '/education.jpg'
-                           : cat.id === 'healthcare' ? '/healthcare.jpg'
-                           : cat.id === 'misconduct' ? '/misconduct.jpg'
-                           : '/document.jpg';
+            const catImage = cat.illustration || '/document.jpg';
 
             return (
               <Parallelogram

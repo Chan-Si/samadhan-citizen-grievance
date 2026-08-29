@@ -13,6 +13,7 @@ export interface CategoryInfo {
   title: string;
   description: string;
   iconName: string;
+  illustration: string;
   subtopics: SubtopicInfo[];
   routingDepartment: string;
 }
@@ -24,6 +25,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Roads & Public Spaces',
     description: 'Report potholes, damaged roads, blocked roads, and other public-space problems.',
     iconName: 'RoadIcon',
+    illustration: '/pothole.jpg',
     routingDepartment: 'Guwahati Division, PWD Roads, Assam',
     subtopics: [
       { id: 'potholes', title: 'Potholes & Road Damage', description: 'Large potholes, cracks, or surface degradation causing traffic safety risks.', illustration: '/roads-potholes.jpg' },
@@ -42,6 +44,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Electricity',
     description: 'Report power outages, voltage fluctuations, billing, or connection problems.',
     iconName: 'ZapIcon',
+    illustration: '/power.jpg',
     routingDepartment: 'Assam Power Distribution Company Limited (APDCL), Guwahati Zone',
     subtopics: [
       { id: 'outage', title: 'Power Outage', description: 'Complete blackout in your house or block.', illustration: '/electricity-outage.jpg' },
@@ -59,6 +62,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Water & Drainage',
     description: 'Report irregular water supply, leakage, or drain blockages.',
     iconName: 'DropletIcon',
+    illustration: '/drainage.jpg',
     routingDepartment: 'Water Supply & Drainage Wing, Guwahati Municipal Corporation',
     subtopics: [
       { id: 'no_water', title: 'No Water Supply', description: 'No municipal water supply at home for more than 24 hours.', illustration: '/water-no-supply.jpg' },
@@ -76,6 +80,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Waste & Sanitation',
     description: 'Report overflowing bins, uncollected garbage, or public hygiene issues.',
     iconName: 'TrashIcon',
+    illustration: '/waste.jpg',
     routingDepartment: 'Conservancy & Waste Management Division, Guwahati Municipal Corporation',
     subtopics: [
       { id: 'garbage_uncollected', title: 'Garbage Not Collected', description: 'Door-to-door waste collectors not visiting for multiple days.', illustration: '/waste-not-collected.jpg' },
@@ -92,6 +97,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Public Transport',
     description: 'Report issues with city buses, bus stops, or transit routes.',
     iconName: 'BusIcon',
+    illustration: '/transport.jpg',
     routingDepartment: 'Assam State Transport Corporation (ASTC), Kamrup Metropolitan Division',
     subtopics: [
       { id: 'bus_service', title: 'Bus Service Problem', description: 'Buses not operating or missing scheduled trips.', illustration: '/transport-bus-service.jpg' },
@@ -108,6 +114,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Government Services',
     description: 'Report passport, licensing, tax, or registration delays.',
     iconName: 'FileTextIcon',
+    illustration: '/document.jpg',
     routingDepartment: 'District Citizen Service Center (Seva Kendra), Kamrup Metropolitan',
     subtopics: [
       { id: 'gov_delay', title: 'Government Service Delayed', description: 'No response or processing for long past standard service timelines.', illustration: '/government-delayed.jpg' },
@@ -126,6 +133,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Pension & Benefits',
     description: 'Report problems with old age pension, subsidies, or scholarship payments.',
     iconName: 'CreditCardIcon',
+    illustration: '/pension.jpg',
     routingDepartment: 'Office of the District Social Welfare Officer, Kamrup Metropolitan',
     subtopics: [
       { id: 'pension_delay', title: 'Pension Payment Delayed', description: 'Monthly pension not credited on time.', illustration: '/pension-delayed.jpg' },
@@ -142,6 +150,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Certificates & Documents',
     description: 'Report issues with birth, caste, income, or marriage certificates.',
     iconName: 'AwardIcon',
+    illustration: '/certificates.jpg',
     routingDepartment: 'Office of the Deputy Commissioner (General Branch), Kamrup Metropolitan',
     subtopics: [
       { id: 'cert_delay', title: 'Certificate Request Delayed', description: 'Certificate creation delayed past service level SLA.', illustration: '/certificate-delayed.jpg' },
@@ -158,6 +167,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Education',
     description: 'Report issues with government schools, facilities, exams, or marksheets.',
     iconName: 'BookOpenIcon',
+    illustration: '/education.jpg',
     routingDepartment: 'Office of the Inspector of Schools, Kamrup District Circle',
     subtopics: [
       { id: 'scholarship_edu', title: 'Scholarship Problem', description: 'Delayed merit-cum-means payments or application issues.', illustration: '/education-scholarship.jpg' },
@@ -174,6 +184,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Healthcare',
     description: 'Report medicine shortage, infrastructure, or doctor availability at public hospitals.',
     iconName: 'HeartPulseIcon',
+    illustration: '/healthcare.jpg',
     routingDepartment: 'Office of the Joint Director of Health Services, Kamrup Metropolitan',
     subtopics: [
       { id: 'hospital_service', title: 'Hospital Service Problem', description: 'Long wait times, poor hygiene, or refusal of treatment.', illustration: '/healthcare-hospital.jpg' },
@@ -191,6 +202,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     title: 'Public Officials & Misconduct',
     description: 'Report demands for bribes, harassment, or denial of fair service.',
     iconName: 'ShieldAlertIcon',
+    illustration: '/misconduct.jpg',
     routingDepartment: 'Office of the District Vigilance Officer, Kamrup Metropolitan',
     subtopics: [
       { id: 'bribe', title: 'Bribe Demanded', description: 'Any public officer asking cash/favours to process applications.', illustration: '/official-bribe.jpg' },
@@ -989,8 +1001,8 @@ export const getLocalizedCategories = (lang: Language): CategoryInfo[] => {
     console.error(e);
   }
 
-  if (!district) district = 'Kamrup Metropolitan';
-  if (!state) state = 'Assam';
+  if (!district) district = 'Bangalore Urban';
+  if (!state) state = 'Karnataka';
 
   const dict = CATEGORY_TRANSLATIONS[lang] || CATEGORY_TRANSLATIONS.en;
   
