@@ -131,43 +131,69 @@ export const Home: React.FC<HomeProps> = ({
   }, []);
 
   const getComplaintImage = (comp: Complaint) => {
+    let img = '';
     if (comp.evidence && comp.evidence.length > 0 && comp.evidence[0]) {
-      return comp.evidence[0];
+      img = comp.evidence[0];
+    } else {
+      const categoryId = (comp.category || '').toLowerCase();
+      const sub = (comp.subcategory || '').toLowerCase();
+      
+      if (sub.includes('pothole') || sub.includes('road') || sub.includes('divider') || sub.includes('sign') || sub.includes('signal') || sub.includes('speed') || categoryId.includes('road')) {
+        img = '/pothole.jpg';
+      } else if (sub.includes('water') || sub.includes('drain') || sub.includes('sewage') || sub.includes('flow') || categoryId.includes('water')) {
+        img = '/drainage.jpg';
+      } else if (sub.includes('power') || sub.includes('cut') || sub.includes('voltage') || sub.includes('electricity') || sub.includes('meter') || categoryId.includes('electricity')) {
+        img = '/power.jpg';
+      } else if (sub.includes('garbage') || sub.includes('waste') || sub.includes('bin') || sub.includes('dump') || sub.includes('toilet') || categoryId.includes('waste')) {
+        img = '/waste.jpg';
+      } else if (sub.includes('bus') || sub.includes('stop') || sub.includes('transit') || sub.includes('transport') || categoryId.includes('transport')) {
+        img = '/transport.jpg';
+      } else if (sub.includes('pension') || sub.includes('scheme') || sub.includes('benefit') || sub.includes('scholarship') || categoryId.includes('pension')) {
+        img = '/pension.jpg';
+      } else if (sub.includes('certificate') || sub.includes('document') || sub.includes('license') || sub.includes('passport') || sub.includes('delay') || categoryId.includes('certificates') || categoryId.includes('gov')) {
+        img = '/certificates.jpg';
+      } else if (sub.includes('school') || sub.includes('teacher') || sub.includes('education') || sub.includes('exam') || categoryId.includes('education')) {
+        img = '/education.jpg';
+      } else if (sub.includes('hospital') || sub.includes('doctor') || sub.includes('medicine') || sub.includes('health') || categoryId.includes('healthcare')) {
+        img = '/healthcare.jpg';
+      } else if (sub.includes('bribe') || sub.includes('corruption') || sub.includes('officer') || sub.includes('misconduct') || categoryId.includes('misconduct')) {
+        img = '/misconduct.jpg';
+      } else {
+        img = '/other-public-problem.jpg';
+      }
     }
-    const categoryId = (comp.category || '').toLowerCase();
-    const sub = (comp.subcategory || '').toLowerCase();
-    
-    if (sub.includes('pothole') || sub.includes('road') || sub.includes('divider') || sub.includes('sign') || sub.includes('signal') || sub.includes('speed') || categoryId.includes('road')) {
-      return '/pothole.jpg';
+
+    // Map old placeholder images to correct specific subtopic illustrations
+    if (img === '/pothole.jpg') {
+      const sub = (comp.subcategory || '').toLowerCase();
+      if (sub.includes('signal') || sub.includes('traffic light')) {
+        return '/roads-broken-signal.jpg';
+      }
+      return '/roads-potholes.jpg';
     }
-    if (sub.includes('water') || sub.includes('drain') || sub.includes('sewage') || sub.includes('flow') || categoryId.includes('water')) {
-      return '/drainage.jpg';
+    if (img === '/drainage.jpg') {
+      const sub = (comp.subcategory || '').toLowerCase();
+      if (sub.includes('waterlogging') || sub.includes('water-logging')) {
+        return '/waterlogging.jpg';
+      }
+      return '/water-blocked-drain.jpg';
     }
-    if (sub.includes('power') || sub.includes('cut') || sub.includes('voltage') || sub.includes('electricity') || sub.includes('meter') || categoryId.includes('electricity')) {
-      return '/power.jpg';
+    if (img === '/power.jpg') {
+      return '/electricity-frequent-cuts.jpg';
     }
-    if (sub.includes('garbage') || sub.includes('waste') || sub.includes('bin') || sub.includes('dump') || sub.includes('toilet') || categoryId.includes('waste')) {
-      return '/waste.jpg';
+    if (img === '/waste.jpg') {
+      return '/waste-dirty-public-area.jpg';
     }
-    if (sub.includes('bus') || sub.includes('stop') || sub.includes('transit') || sub.includes('transport') || categoryId.includes('transport')) {
-      return '/transport.jpg';
+    if (img === '/transport.jpg') {
+      return '/transport-bus-service.jpg';
     }
-    if (sub.includes('pension') || sub.includes('scheme') || sub.includes('benefit') || sub.includes('scholarship') || categoryId.includes('pension')) {
-      return '/pension.jpg';
+    if (img === '/pension.jpg') {
+      return '/pension-delayed.jpg';
     }
-    if (sub.includes('certificate') || sub.includes('document') || sub.includes('license') || sub.includes('passport') || sub.includes('delay') || categoryId.includes('certificates') || categoryId.includes('gov')) {
-      return '/certificates.jpg';
+    if (img === '/certificates.jpg') {
+      return '/certificate-not-received.jpg';
     }
-    if (sub.includes('school') || sub.includes('teacher') || sub.includes('education') || sub.includes('exam') || categoryId.includes('education')) {
-      return '/education.jpg';
-    }
-    if (sub.includes('hospital') || sub.includes('doctor') || sub.includes('medicine') || sub.includes('health') || categoryId.includes('healthcare')) {
-      return '/healthcare.jpg';
-    }
-    if (sub.includes('bribe') || sub.includes('corruption') || sub.includes('officer') || sub.includes('misconduct') || categoryId.includes('misconduct')) {
-      return '/misconduct.jpg';
-    }
-    return '/pothole.jpg';
+    return img;
   };
   
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
@@ -181,8 +207,8 @@ export const Home: React.FC<HomeProps> = ({
   // Get localized categories and subcategories
   const localizedCategories = getLocalizedCategories(language);
 
-  // Filter out Resolved complaints from homepage top complaints, only show In Progress or active ones
-  const activeComplaints = complaints.filter(c => c.status !== 'Resolved');
+  // Filter out Resolved complaints and the Waterlogging complaint from homepage top complaints
+  const activeComplaints = complaints.filter(c => c.status !== 'Resolved' && c.id !== 'GRV-2026-00471');
   const topComplaints = getLocalizedComplaints(activeComplaints.slice(0, 5), language);
 
   useEffect(() => {

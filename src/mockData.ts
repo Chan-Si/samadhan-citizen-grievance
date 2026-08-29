@@ -34,7 +34,7 @@ const BASE_CATEGORIES: CategoryInfo[] = [
       { id: 'traffic_signals', title: 'Broken Traffic Signals', description: 'Non-functioning traffic lights causing chaos and accidents.', illustration: '/roads-broken-signal.jpg' },
       { id: 'speed_breakers', title: 'Unsafe Speed Breakers', description: 'Illegal, unpainted, or excessively high speed bumps.', illustration: '/roads-unsafe-speedbreaker.jpg' },
       { id: 'street_infra', title: 'Street Infrastructure Problems', description: 'Damaged street railings, benches, or public parks equipment.', illustration: '/roads-street-infrastructure.jpg' },
-      { id: 'other_roads', title: 'Other Road/Public Space Problem', description: 'Any other issues with roads and shared public locations.', illustration: '/roads-other.jpg' }
+      { id: 'other_roads', title: 'Other Road/Public Space Problem', description: 'Any other issues with roads and shared public locations.', illustration: '/other-public-problem.jpg' }
     ]
   },
   {
@@ -110,14 +110,14 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'FileTextIcon',
     routingDepartment: 'District Citizen Service Center (Seva Kendra), Kamrup Metropolitan',
     subtopics: [
-      { id: 'gov_delay', title: 'Government Service Delayed', description: 'No response or processing for long past standard service timelines.', illustration: '/document.jpg' },
-      { id: 'gov_reject', title: 'Government Service Rejected', description: 'Unfair rejection of requests without proper grounds or explanation.', illustration: '/document.jpg' },
-      { id: 'gov_status', title: 'Status Not Updated', description: 'Online application tracker shows stale or invalid steps.', illustration: '/document.jpg' },
-      { id: 'gov_apply', title: 'Unable to Apply', description: 'Portal technical bugs, errors, or down times.', illustration: '/document.jpg' },
-      { id: 'gov_not_received', title: 'Service Not Received', description: 'Service approved but physical delivery (e.g. card/booklet) pending.', illustration: '/document.jpg' },
-      { id: 'gov_incorrect', title: 'Incorrect Information', description: 'Wrong names, addresses, or dates printed on documents.', illustration: '/document.jpg' },
-      { id: 'gov_correction', title: 'Correction/Update Problem', description: 'Delays in editing/updating existing application fields.', illustration: '/document.jpg' },
-      { id: 'gov_staff', title: 'Staff/Service Issue', description: 'Unhelpful or absent support at public counters.', illustration: '/document.jpg' },
+      { id: 'gov_delay', title: 'Government Service Delayed', description: 'No response or processing for long past standard service timelines.', illustration: '/government-delayed.jpg' },
+      { id: 'gov_reject', title: 'Government Service Rejected', description: 'Unfair rejection of requests without proper grounds or explanation.', illustration: '/government-rejected.jpg' },
+      { id: 'gov_status', title: 'Status Not Updated', description: 'Online application tracker shows stale or invalid steps.', illustration: '/government-status.jpg' },
+      { id: 'gov_apply', title: 'Unable to Apply', description: 'Portal technical bugs, errors, or down times.', illustration: '/government-unable-apply.jpg' },
+      { id: 'gov_not_received', title: 'Service Not Received', description: 'Service approved but physical delivery (e.g. card/booklet) pending.', illustration: '/government-not-received.jpg' },
+      { id: 'gov_incorrect', title: 'Incorrect Information', description: 'Wrong names, addresses, or dates printed on documents.', illustration: '/government-incorrect-information.jpg' },
+      { id: 'gov_correction', title: 'Correction/Update Problem', description: 'Delays in editing/updating existing application fields.', illustration: '/government-correction.jpg' },
+      { id: 'gov_staff', title: 'Staff/Service Issue', description: 'Unhelpful or absent support at public counters.', illustration: '/government-staff.jpg' },
       { id: 'other_gov', title: 'Other Government Service Problem', description: 'General issues faced at citizen service centers (Seva Kendras).', illustration: '/other-public-problem.jpg' }
     ]
   },
@@ -128,13 +128,12 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'CreditCardIcon',
     routingDepartment: 'Office of the District Social Welfare Officer, Kamrup Metropolitan',
     subtopics: [
-      { id: 'pension_delay', title: 'Pension Payment Delayed', description: 'Monthly pension not credited on time.', illustration: '/pension.jpg' },
-      { id: 'pension_stopped', title: 'Pension Stopped', description: 'Pension payments ceased abruptly without notice.', illustration: '/pension.jpg' },
-      { id: 'pension_incorrect', title: 'Incorrect Pension Amount', description: 'Received less amount than designated allocation.', illustration: '/pension.jpg' },
-      { id: 'pension_apply', title: 'Pension Application Problem', description: 'Difficulties/delays in registering new eligible beneficiaries.', illustration: '/pension.jpg' },
-      { id: 'benefit_delay', title: 'Government Benefit Delayed', description: 'Direct Benefit Transfers (DBT) or subsidies pending.', illustration: '/pension.jpg' },
-      { id: 'benefit_reject', title: 'Government Benefit Rejected', description: 'Arbitrary exclusion from welfare schemes.', illustration: '/pension.jpg' },
-
+      { id: 'pension_delay', title: 'Pension Payment Delayed', description: 'Monthly pension not credited on time.', illustration: '/pension-delayed.jpg' },
+      { id: 'pension_stopped', title: 'Pension Stopped', description: 'Pension payments ceased abruptly without notice.', illustration: '/pension-stopped.jpg' },
+      { id: 'pension_incorrect', title: 'Incorrect Pension Amount', description: 'Received less amount than designated allocation.', illustration: '/pension-incorrect-amount.jpg' },
+      { id: 'pension_apply', title: 'Pension Application Problem', description: 'Difficulties/delays in registering new eligible beneficiaries.', illustration: '/pension-application.jpg' },
+      { id: 'benefit_delay', title: 'Government Benefit Delayed', description: 'Direct Benefit Transfers (DBT) or subsidies pending.', illustration: '/benefit-delayed.jpg' },
+      { id: 'benefit_reject', title: 'Government Benefit Rejected', description: 'Arbitrary exclusion from welfare schemes.', illustration: '/benefit-rejected.jpg' },
       { id: 'other_pension', title: 'Other Pension/Benefit Problem', description: 'Any other problems with state-sponsored welfare programs.', illustration: '/other-public-problem.jpg' }
     ]
   },
@@ -147,10 +146,10 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     subtopics: [
       { id: 'cert_delay', title: 'Certificate Request Delayed', description: 'Certificate creation delayed past service level SLA.', illustration: '/certificate-delayed.jpg' },
       { id: 'cert_reject', title: 'Certificate Request Rejected', description: 'Request turned down without clear reasoning.', illustration: '/certificate-rejected.jpg' },
-      { id: 'cert_not_received', title: 'Certificate Not Received', description: 'Approved certificate has not been sent or delivered.', illustration: '/certificates.jpg' },
-      { id: 'cert_incorrect', title: 'Incorrect Details', description: 'Clerical errors on name, parents, or dates in issued certificate.', illustration: '/certificates.jpg' },
-      { id: 'cert_download', title: 'Unable to Download', description: 'PDF files not loading or corrupt signature files on verification portals.', illustration: '/certificates.jpg' },
-      { id: 'cert_correction', title: 'Correction Problem', description: 'Delays in correcting printed mistakes in document files.', illustration: '/certificates.jpg' },
+      { id: 'cert_not_received', title: 'Certificate Not Received', description: 'Approved certificate has not been sent or delivered.', illustration: '/certificate-not-received.jpg' },
+      { id: 'cert_incorrect', title: 'Incorrect Details', description: 'Clerical errors on name, parents, or dates in issued certificate.', illustration: '/certificate-incorrect.jpg' },
+      { id: 'cert_download', title: 'Unable to Download', description: 'PDF files not loading or corrupt signature files on verification portals.', illustration: '/certificate-download.jpg' },
+      { id: 'cert_correction', title: 'Correction Problem', description: 'Delays in correcting printed mistakes in document files.', illustration: '/certificate-correction.jpg' },
       { id: 'other_cert', title: 'Other Government Certificate/Document', description: 'Other document registration disputes.', illustration: '/other-public-problem.jpg' }
     ]
   },
@@ -161,13 +160,13 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'BookOpenIcon',
     routingDepartment: 'Office of the Inspector of Schools, Kamrup District Circle',
     subtopics: [
-      { id: 'scholarship_edu', title: 'Scholarship Problem', description: 'Delayed merit-cum-means payments or application issues.', illustration: '/pension.jpg' },
-      { id: 'exam', title: 'Examination Problem', description: 'Admit card delays, exam center issues, or results discrepancies.', illustration: '/pension.jpg' },
-      { id: 'marksheet', title: 'Certificate/Marksheet Problem', description: 'Non-issuance or corrections in board results sheets.', illustration: '/pension.jpg' },
-      { id: 'admission', title: 'Admission Problem', description: 'Issues with quota allocations or seat allotments under Right to Education (RTE).', illustration: '/pension.jpg' },
-      { id: 'school_facility', title: 'Government School Facility Problem', description: 'Poor infrastructure, missing toilets, lack of clean water or desk facilities in local public schools.', illustration: '/pension.jpg' },
-      { id: 'teacher_staff', title: 'Teacher/Staff Issue', description: 'Absenteeism of teaching staff or poor education quality.', illustration: '/pension.jpg' },
-      { id: 'other_education', title: 'Other Education Problem', description: 'Any other school or board level grievances.', illustration: '/pension.jpg' }
+      { id: 'scholarship_edu', title: 'Scholarship Problem', description: 'Delayed merit-cum-means payments or application issues.', illustration: '/education-scholarship.jpg' },
+      { id: 'exam', title: 'Examination Problem', description: 'Admit card delays, exam center issues, or results discrepancies.', illustration: '/education-examination.jpg' },
+      { id: 'marksheet', title: 'Certificate/Marksheet Problem', description: 'Non-issuance or corrections in board results sheets.', illustration: '/education-certificate.jpg' },
+      { id: 'admission', title: 'Admission Problem', description: 'Issues with quota allocations or seat allotments under Right to Education (RTE).', illustration: '/education-admission.jpg' },
+      { id: 'school_facility', title: 'Government School Facility Problem', description: 'Poor infrastructure, missing toilets, lack of clean water or desk facilities in local public schools.', illustration: '/education-school-facility.jpg' },
+      { id: 'teacher_staff', title: 'Teacher/Staff Issue', description: 'Absenteeism of teaching staff or poor education quality.', illustration: '/education-teacher.jpg' },
+      { id: 'other_education', title: 'Other Education Problem', description: 'Any other school or board level grievances.', illustration: '/other-public-problem.jpg' }
     ]
   },
   {
@@ -177,14 +176,14 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'HeartPulseIcon',
     routingDepartment: 'Office of the Joint Director of Health Services, Kamrup Metropolitan',
     subtopics: [
-      { id: 'hospital_service', title: 'Hospital Service Problem', description: 'Long wait times, poor hygiene, or refusal of treatment.', illustration: '/healthcare.jpg' },
-      { id: 'medicine', title: 'Medicine Unavailable', description: 'Free essential medicines out of stock at government pharmacies.', illustration: '/healthcare.jpg' },
-      { id: 'appointment', title: 'Appointment Problem', description: 'Failure of online check-in queues or OPD card queues.', illustration: '/healthcare.jpg' },
-      { id: 'diagnostic', title: 'Diagnostic Service Problem', description: 'Broken X-Ray/MRI machinery or delayed lab reports.', illustration: '/healthcare.jpg' },
-      { id: 'ambulance', title: 'Ambulance Problem', description: 'Delayed response or non-availability of 108 emergency service.', illustration: '/healthcare.jpg' },
-      { id: 'health_infra', title: 'Facility/Infrastructure Problem', description: 'Unhygienic wards, broken beds, or water outages in PHC.', illustration: '/healthcare.jpg' },
-      { id: 'health_scheme', title: 'Health Scheme Problem', description: 'Rejection of cashless cards under health assurance programs.', illustration: '/healthcare.jpg' },
-      { id: 'other_health', title: 'Other Healthcare Problem', description: 'General complaints concerning public health systems.', illustration: '/healthcare.jpg' }
+      { id: 'hospital_service', title: 'Hospital Service Problem', description: 'Long wait times, poor hygiene, or refusal of treatment.', illustration: '/healthcare-hospital.jpg' },
+      { id: 'medicine', title: 'Medicine Unavailable', description: 'Free essential medicines out of stock at government pharmacies.', illustration: '/healthcare-medicine.jpg' },
+      { id: 'appointment', title: 'Appointment Problem', description: 'Failure of online check-in queues or OPD card queues.', illustration: '/healthcare-appointment.jpg' },
+      { id: 'diagnostic', title: 'Diagnostic Service Problem', description: 'Broken X-Ray/MRI machinery or delayed lab reports.', illustration: '/healthcare-diagnostic.jpg' },
+      { id: 'ambulance', title: 'Ambulance Problem', description: 'Delayed response or non-availability of 108 emergency service.', illustration: '/healthcare-ambulance.jpg' },
+      { id: 'health_infra', title: 'Facility/Infrastructure Problem', description: 'Unhygienic wards, broken beds, or water outages in PHC.', illustration: '/healthcare-facility.jpg' },
+      { id: 'health_scheme', title: 'Health Scheme Problem', description: 'Rejection of cashless cards under health assurance programs.', illustration: '/healthcare-scheme.jpg' },
+      { id: 'other_health', title: 'Other Healthcare Problem', description: 'General complaints concerning public health systems.', illustration: '/other-public-problem.jpg' }
     ]
   },
   {
@@ -194,12 +193,12 @@ const BASE_CATEGORIES: CategoryInfo[] = [
     iconName: 'ShieldAlertIcon',
     routingDepartment: 'Office of the District Vigilance Officer, Kamrup Metropolitan',
     subtopics: [
-      { id: 'bribe', title: 'Bribe Demanded', description: 'Any public officer asking cash/favours to process applications.', illustration: '/misconduct.jpg' },
-      { id: 'corruption', title: 'Corruption Concern', description: 'Leakage of funds, dummy projects, or embezzlement in local works.', illustration: '/misconduct.jpg' },
-      { id: 'denied_service', title: 'Service Denied Unfairly', description: 'Official refusing to accept applications without valid legal reasons.', illustration: '/misconduct.jpg' },
-      { id: 'staff_misconduct', title: 'Staff Misconduct', description: 'Abusive language, physical intimidation, or rude behavior by officers.', illustration: '/misconduct.jpg' },
-      { id: 'harassment', title: 'Harassment', description: 'Targeting or extortion threats from department personnel.', illustration: '/misconduct.jpg' },
-      { id: 'other_misconduct', title: 'Other Official/Service Misconduct', description: 'Other ethical code violations by public servants.', illustration: '/misconduct.jpg' }
+      { id: 'bribe', title: 'Bribe Demanded', description: 'Any public officer asking cash/favours to process applications.', illustration: '/official-bribe.jpg' },
+      { id: 'corruption', title: 'Corruption Concern', description: 'Leakage of funds, dummy projects, or embezzlement in local works.', illustration: '/official-corruption.jpg' },
+      { id: 'denied_service', title: 'Service Denied Unfairly', description: 'Official refusing to accept applications without valid legal reasons.', illustration: '/official-service-denied.jpg' },
+      { id: 'staff_misconduct', title: 'Staff Misconduct', description: 'Abusive language, physical intimidation, or rude behavior by officers.', illustration: '/official-misconduct.jpg' },
+      { id: 'harassment', title: 'Harassment', description: 'Targeting or extortion threats from department personnel.', illustration: '/official-harassment.jpg' },
+      { id: 'other_misconduct', title: 'Other Official/Service Misconduct', description: 'Other ethical code violations by public servants.', illustration: '/other-public-problem.jpg' }
     ]
   }
 ];
@@ -1068,7 +1067,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
     dateSubmitted: '2026-08-22',
     dateObserved: '2026-08-21',
     severity: 'Moderate',
-    evidence: ['/drainage.jpg'],
+    evidence: ['/waterlogging.jpg'],
     responsibleDepartment: 'Water Supply & Drainage Wing, Guwahati Municipal Corporation',
     status: 'In Progress',
     timeline: [
@@ -1155,7 +1154,7 @@ export const INITIAL_COMPLAINTS: Complaint[] = [
     dateSubmitted: '2026-08-24',
     dateObserved: '2026-08-23',
     severity: 'Serious / Safety risk',
-    evidence: ['/pothole.jpg'],
+    evidence: ['/roads-broken-signal.jpg'],
     responsibleDepartment: 'Guwahati Division, PWD Roads, Assam',
     status: 'In Progress',
     timeline: [

@@ -32,6 +32,14 @@ const getStateForDistrict = (dist: string): string => {
 
 const adjustComplaintsForUser = (initialComplaints: Complaint[], district: string, state: string): Complaint[] => {
   return initialComplaints.map(c => {
+    let evidence = c.evidence || [];
+    if (c.id === 'GRV-2026-00356' && (evidence[0] === '/pothole.jpg' || !evidence[0] || evidence[0] === '/roads-potholes.jpg')) {
+      evidence = ['/roads-broken-signal.jpg'];
+    }
+    if (c.id === 'GRV-2026-00471' && (evidence[0] === '/drainage.jpg' || !evidence[0] || evidence[0] === '/water-blocked-drain.jpg')) {
+      evidence = ['/waterlogging.jpg'];
+    }
+
     const address = (c.location?.address || '')
       .replace(/Kamrup Metropolitan/g, district)
       .replace(/Guwahati/g, district)
@@ -55,6 +63,7 @@ const adjustComplaintsForUser = (initialComplaints: Complaint[], district: strin
 
     return {
       ...c,
+      evidence,
       location: {
         ...c.location,
         address,
@@ -89,7 +98,19 @@ function App() {
 
   const [complaints, setComplaints] = useState<Complaint[]>(() => {
     const saved = localStorage.getItem('samadhan_complaints');
-    return saved ? JSON.parse(saved) : INITIAL_COMPLAINTS;
+    let parsed = saved ? JSON.parse(saved) : INITIAL_COMPLAINTS;
+    if (Array.isArray(parsed)) {
+      parsed = parsed.map((c: any) => {
+        if (c.id === 'GRV-2026-00356' && (c.evidence[0] === '/pothole.jpg' || !c.evidence[0] || c.evidence[0] === '/roads-potholes.jpg')) {
+          c.evidence = ['/roads-broken-signal.jpg'];
+        }
+        if (c.id === 'GRV-2026-00471' && (c.evidence[0] === '/drainage.jpg' || !c.evidence[0] || c.evidence[0] === '/water-blocked-drain.jpg')) {
+          c.evidence = ['/waterlogging.jpg'];
+        }
+        return c;
+      });
+    }
+    return parsed;
   });
 
   const [notifications, setNotifications] = useState<Notification[]>(() => {

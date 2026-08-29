@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Navigation, AlertTriangle, Check } from 'lucide-react';
-import type { LocationData, Language } from '../types';
+import type { LocationData, Language, Complaint } from '../types';
 import { Parallelogram } from './Parallelogram';
 import { STATES_AND_DISTRICTS } from '../statesAndDistricts';
+import { INITIAL_COMPLAINTS } from '../mockData';
+import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface LocationSelectorProps {
   initialLocation?: LocationData;
@@ -11,160 +14,21 @@ interface LocationSelectorProps {
   language: Language;
 }
 
-// Fixed mock map coordinate reference mapping to mock streets/landmarks
-interface Landmark {
-  name: string;
-  x: number;
-  y: number;
-  address: string;
-}
-
-const getDistrictMapData = (dist: string) => {
+const getDistrictCoordinates = (dist: string): [number, number] => {
   switch (dist) {
-    case 'Cachar':
-      return {
-        river: 'Barak River',
-        riverColor: '#3B82F6',
-        riverPath: 'M 0 350 Q 150 320 300 370 T 500 340',
-        riverTextX: 180,
-        riverTextY: 340,
-        roads: [
-          { name: 'Hospital Road', x1: 50, y1: 0, x2: 450, y2: 400, textX: 80, textY: 70, rotate: 45 },
-          { name: 'Station Road', x1: 0, y1: 200, x2: 500, y2: 200, textX: 20, textY: 192, rotate: 0 },
-          { name: 'Circuit House Road', x1: 150, y1: 0, x2: 150, y2: 400, textX: 156, textY: 80, rotate: 90 }
-        ],
-        landmarks: [
-          { name: 'Silchar Railway Station', x: 250, y: 100 },
-          { name: 'SM Dev Civil Hospital', x: 120, y: 150 },
-          { name: 'Assam University', x: 80, y: 80 },
-          { name: 'Silchar Medical College', x: 200, y: 200 },
-          { name: 'Goldighi Shopping Mall', x: 300, y: 220 },
-          { name: 'District Library Silchar', x: 180, y: 280 }
-        ]
-      };
-    case 'Jorhat':
-      return {
-        river: 'Bhogdoi River',
-        riverColor: '#60A5FA',
-        riverPath: 'M 100 0 Q 80 180 120 280 T 90 400',
-        riverTextX: 110,
-        riverTextY: 40,
-        roads: [
-          { name: 'KB Road', x1: 0, y1: 100, x2: 500, y2: 300, textX: 300, textY: 210, rotate: 22 },
-          { name: 'AT Road', x1: 0, y1: 300, x2: 500, y2: 100, textX: 100, textY: 250, rotate: -22 },
-          { name: 'Gar-Ali Road', x1: 0, y1: 220, x2: 500, y2: 220, textX: 20, textY: 212, rotate: 0 }
-        ],
-        landmarks: [
-          { name: 'Jorhat Railway Station', x: 250, y: 100 },
-          { name: 'Jorhat Gymkhana Club', x: 120, y: 150 },
-          { name: 'Jorhat Medical College', x: 80, y: 80 },
-          { name: 'AAU Campus Jorhat', x: 200, y: 200 },
-          { name: 'Jorhat Science Centre', x: 300, y: 220 },
-          { name: 'Prince of Wales Institute', x: 180, y: 280 }
-        ]
-      };
-    case 'Dibrugarh':
-      return {
-        river: 'Brahmaputra River',
-        riverColor: '#93C5FD',
-        riverPath: 'M 0 0 Q 220 120 180 400',
-        riverTextX: 80,
-        riverTextY: 50,
-        roads: [
-          { name: 'AT Road', x1: 0, y1: 280, x2: 500, y2: 280, textX: 20, textY: 272, rotate: 0 },
-          { name: 'Mankotta Road', x1: 220, y1: 0, x2: 220, y2: 400, textX: 226, textY: 80, rotate: 90 },
-          { name: 'Marwari Patty Road', x1: 180, y1: 400, x2: 450, y2: 0, textX: 230, textY: 330, rotate: -56 }
-        ],
-        landmarks: [
-          { name: 'Dibrugarh Town Station', x: 250, y: 100 },
-          { name: 'Assam Medical College', x: 120, y: 150 },
-          { name: 'Dibrugarh University', x: 80, y: 80 },
-          { name: 'Chowkidingee Playground', x: 200, y: 200 },
-          { name: 'Junction Mall Dibrugarh', x: 300, y: 220 },
-          { name: 'District Court Dibrugarh', x: 180, y: 280 }
-        ]
-      };
-    case 'Sonitpur':
-      return {
-        river: 'Brahmaputra River',
-        riverColor: '#93C5FD',
-        riverPath: 'M 250 0 Q 350 150 500 200',
-        riverTextX: 340,
-        riverTextY: 80,
-        roads: [
-          { name: 'Cole Road', x1: 0, y1: 100, x2: 500, y2: 100, textX: 20, textY: 92, rotate: 0 },
-          { name: 'Tezpur Bypass Road', x1: 400, y1: 0, x2: 400, y2: 400, textX: 406, textY: 80, rotate: 90 },
-          { name: 'AT Road', x1: 0, y1: 380, x2: 500, y2: 180, textX: 100, textY: 330, rotate: -22 }
-        ],
-        landmarks: [
-          { name: 'Tezpur Railway Station', x: 250, y: 100 },
-          { name: 'Tezpur Medical College', x: 120, y: 150 },
-          { name: 'Tezpur University', x: 80, y: 80 },
-          { name: 'Agnigarh Hill Park', x: 200, y: 200 },
-          { name: 'Cole Park Tezpur', x: 300, y: 220 },
-          { name: 'Tezpur District Court', x: 180, y: 280 }
-        ]
-      };
+    case 'Kamrup Metropolitan': return [91.7761, 26.1754];
+    case 'Jorhat': return [94.2026, 26.7509];
+    case 'Dibrugarh': return [94.9120, 27.4728];
+    case 'Sonitpur': return [92.7926, 26.6528];
+    case 'Cachar': return [92.7989, 24.8333];
     default: {
-      // Simple hash helper to get deterministic numbers from district name
-      const getHash = (str: string, offset: number) => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return Math.abs(hash + offset);
-      };
-
-      // Generate unique river shape based on hash
-      const rY1 = 30 + (getHash(dist, 1) % 60); // 30-90
-      const rY2 = 30 + (getHash(dist, 2) % 60); // 30-90
-      const rPath = `M 0 ${rY1} Q 150 ${rY1 - 20} 280 ${rY2 + 20} T 500 ${rY2}`;
-      
-      // Generate unique road lines based on hash
-      const road1Y = 120 + (getHash(dist, 3) % 80); // 120-200 (horizontal road)
-      const road2X = 220 + (getHash(dist, 4) % 120); // 220-340 (vertical road)
-      
-      const diagStart = 50 + (getHash(dist, 5) % 80); // 50-130
-      const diagEnd = 200 + (getHash(dist, 6) % 100); // 200-300
-      
-      return {
-        river: dist === 'Kamrup Metropolitan' ? 'Brahmaputra River' : `${dist} River/Canal`,
-        riverColor: '#93C5FD',
-        riverPath: dist === 'Kamrup Metropolitan' ? 'M 0 40 Q 150 20 280 50 T 500 30' : rPath,
-        riverTextX: 180,
-        riverTextY: dist === 'Kamrup Metropolitan' ? 32 : rY1 - 8,
-        roads: [
-          { 
-            name: dist === 'Kamrup Metropolitan' ? 'R.G. Baruah Road' : `${dist} Main Road`, 
-            x1: 0, y1: dist === 'Kamrup Metropolitan' ? 150 : road1Y, 
-            x2: 500, y2: dist === 'Kamrup Metropolitan' ? 150 : road1Y, 
-            textX: 20, textY: dist === 'Kamrup Metropolitan' ? 142 : road1Y - 8, 
-            rotate: 0 
-          },
-          { 
-            name: dist === 'Kamrup Metropolitan' ? 'G.S. Road' : `${dist} Bypass Road`, 
-            x1: dist === 'Kamrup Metropolitan' ? 300 : road2X, y1: 0, 
-            x2: dist === 'Kamrup Metropolitan' ? 300 : road2X, y2: 400, 
-            textX: dist === 'Kamrup Metropolitan' ? 306 : road2X + 6, textY: 80, 
-            rotate: 90 
-          },
-          { 
-            name: dist === 'Kamrup Metropolitan' ? 'Zoo Road' : `${dist} Link Road`, 
-            x1: dist === 'Kamrup Metropolitan' ? 100 : diagStart, y1: 350, 
-            x2: dist === 'Kamrup Metropolitan' ? 250 : diagEnd, y2: 50, 
-            textX: dist === 'Kamrup Metropolitan' ? 110 : diagStart + 10, textY: dist === 'Kamrup Metropolitan' ? 270 : 250, 
-            rotate: dist === 'Kamrup Metropolitan' ? -63 : -55 
-          }
-        ],
-        landmarks: [
-          { name: dist === 'Kamrup Metropolitan' ? 'ABC School' : `${dist} School`, x: 120, y: 150 },
-          { name: dist === 'Kamrup Metropolitan' ? 'ABC Market' : `${dist} Market`, x: 300, y: 220 },
-          { name: dist === 'Kamrup Metropolitan' ? 'Guwahati High Court' : `${dist} High Court`, x: 80, y: 80 },
-          { name: dist === 'Kamrup Metropolitan' ? 'Guwahati Railway Station' : `${dist} Railway Station`, x: 250, y: 100 },
-          { name: dist === 'Kamrup Metropolitan' ? 'State Zoo' : `${dist} Civil Hospital`, x: 200, y: 200 },
-          { name: dist === 'Kamrup Metropolitan' ? 'Guwahati Public School' : `${dist} District Court`, x: 180, y: 280 }
-        ]
-      };
+      let hash = 0;
+      for (let i = 0; i < dist.length; i++) {
+        hash = dist.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const lat = 25.5 + (Math.abs(hash % 100) / 100) * 2.0;
+      const lng = 90.5 + (Math.abs((hash >> 5) % 100) / 100) * 4.0;
+      return [lng, lat];
     }
   }
 };
@@ -178,31 +42,42 @@ const getStateForDistrict = (dist: string): string => {
   return 'Assam';
 };
 
-const getMockLandmarks = (dist: string): Landmark[] => {
-  const mapData = getDistrictMapData(dist);
-  const resolvedState = getStateForDistrict(dist);
-  return mapData.landmarks.map((l, i) => {
-    let address = '';
-    if (dist === 'Kamrup Metropolitan') {
-      const standardAddresses = [
-        'Near ABC School, R.G. Baruah Road, Guwahati, Assam',
-        'ABC Market Entrance, G.S. Road, Guwahati, Assam',
-        'MG Road, Latasil, Guwahati, Assam',
-        'Station Road, Paltan Bazaar, Guwahati, Assam',
-        'Zoo Road Main Entrance, Guwahati, Assam',
-        'GPS Campus Lane, Zoo Road, Guwahati, Assam'
-      ];
-      address = standardAddresses[i] || `${l.name}, Guwahati, ${dist}, ${resolvedState}`;
-    } else {
-      address = `Near ${l.name}, ${mapData.roads[i % mapData.roads.length].name}, ${dist}, ${resolvedState}`;
+const getFallbackAddress = (lat: number, lng: number, districtName: string, language: Language) => {
+  const resolvedState = getStateForDistrict(districtName);
+  return language === 'hi'
+    ? `निर्देशांक (${lat.toFixed(4)}, ${lng.toFixed(4)}) के पास स्ट्रीट ब्लॉक, ${districtName}, ${resolvedState}`
+    : `Street block near coordinates (${lat.toFixed(4)}, ${lng.toFixed(4)}), ${districtName}, ${resolvedState}`;
+};
+
+const getClusters = (complaints: Complaint[], zoom: number) => {
+  const clusters: any[] = [];
+  const radius = zoom > 14 ? 0.001 : zoom > 12 ? 0.005 : 0.015;
+  
+  complaints.forEach(c => {
+    if (!c.location?.coordinates) return;
+    const { lat, lng } = c.location.coordinates;
+    
+    let added = false;
+    for (let i = 0; i < clusters.length; i++) {
+      const cluster = clusters[i];
+      const dist = Math.sqrt(Math.pow(cluster.lat - lat, 2) + Math.pow(cluster.lng - lng, 2));
+      if (dist < radius) {
+        cluster.points.push(c);
+        cluster.lat = (cluster.lat * (cluster.points.length - 1) + lat) / cluster.points.length;
+        cluster.lng = (cluster.lng * (cluster.points.length - 1) + lng) / cluster.points.length;
+        added = true;
+        break;
+      }
     }
-    return {
-      name: l.name,
-      x: l.x,
-      y: l.y,
-      address
-    };
+    if (!added) {
+      clusters.push({
+        lat,
+        lng,
+        points: [c]
+      });
+    }
   });
+  return clusters;
 };
 
 export const LocationSelector: React.FC<LocationSelectorProps> = ({
@@ -217,94 +92,335 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   );
   const [address, setAddress] = useState(initialLocation?.address || '');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Landmark[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [loadingGeo, setLoadingGeo] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  const [allComplaints] = useState<Complaint[]>(() => {
+    const saved = localStorage.getItem('samadhan_complaints');
+    const list: Complaint[] = saved ? JSON.parse(saved) : INITIAL_COMPLAINTS;
+    const center = getDistrictCoordinates(selectedDistrict);
+    return list.map((c: any) => {
+      if (!c.location?.coordinates) {
+        let hash = 0;
+        for (let i = 0; i < (c.id || '').length; i++) {
+          hash = (c.id || '').charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const latOffset = ((hash % 100) / 100 - 0.5) * 0.04;
+        const lngOffset = (((hash >> 4) % 100) / 100 - 0.5) * 0.04;
+        c.location = {
+          ...c.location,
+          coordinates: {
+            lat: center[1] + latOffset,
+            lng: center[0] + lngOffset
+          }
+        };
+      }
+      return c;
+    });
+  });
+
+  const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number }>(() => {
+    if (initialLocation?.coordinates) {
+      return { lat: initialLocation.coordinates.lat, lng: initialLocation.coordinates.lng };
+    }
+    const center = getDistrictCoordinates(district);
+    return { lat: center[1], lng: center[0] };
+  });
+
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const otherMarkersRef = useRef<maplibregl.Marker[]>([]);
 
   useEffect(() => {
     setSelectedDistrict(district);
   }, [district]);
 
-  const activeLandmarks = getMockLandmarks(selectedDistrict);
-  const districtMapData = getDistrictMapData(selectedDistrict);
-
-  // Map coordinates (percentages 0-100 on canvas)
-  const [markerPos, setMarkerPos] = useState({ x: 50, y: 50 });
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-
-  const [isDragging, setIsDragging] = useState(false);
-
-  const updateMarkerFromEvent = (clientX: number, clientY: number) => {
-    if (!mapContainerRef.current) return;
-    const rect = mapContainerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
-
-    setMarkerPos({ x, y });
-    findNearestAddress(x, y);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsDragging(true);
-    updateMarkerFromEvent(e.clientX, e.clientY);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    updateMarkerFromEvent(e.clientX, e.clientY);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (e.touches && e.touches[0]) {
-      setIsDragging(true);
-      updateMarkerFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    if (e.touches && e.touches[0]) {
-      updateMarkerFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Add global mouse up listener to handle mouse release outside map container
+  // Initializing Map
   useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      setIsDragging(false);
+    if (!mapContainerRef.current) return;
+
+    const center = getDistrictCoordinates(selectedDistrict);
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: {
+        version: 8,
+        sources: {
+          'raster-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          {
+            id: 'simple-tiles',
+            type: 'raster',
+            source: 'raster-tiles',
+            minzoom: 0,
+            maxzoom: 20
+          }
+        ]
+      },
+      center: [center[0], center[1]],
+      zoom: 12
+    });
+
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    mapRef.current = map;
+
+    const updateZoomMarkers = () => {
+      const zoom = map.getZoom();
+      plotComplaintMarkers(map, zoom);
     };
-    window.addEventListener('mouseup', handleGlobalMouseUp);
-    window.addEventListener('touchend', handleGlobalMouseUp);
+
+    map.on('zoom', updateZoomMarkers);
+    map.on('moveend', updateZoomMarkers);
+    map.on('load', updateZoomMarkers);
+
+    // Click map to select location manually
+    map.on('click', async (e: any) => {
+      if (mapRef.current) {
+        const { lng, lat } = e.lngLat;
+        setMarkerPos({ lat, lng });
+        setLocType('map');
+
+        // Reverse Geocode
+        const realAddress = await fetchReverseGeocode(lat, lng);
+        const resolvedAddress = realAddress || getFallbackAddress(lat, lng, selectedDistrict, language);
+        setAddress(resolvedAddress);
+        onLocationSelect({
+          type: 'map',
+          address: resolvedAddress,
+          district: selectedDistrict,
+          coordinates: { lat, lng }
+        });
+      }
+    });
+
     return () => {
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-      window.removeEventListener('touchend', handleGlobalMouseUp);
+      otherMarkersRef.current.forEach(m => m.remove());
+      if (userMarkerRef.current) userMarkerRef.current.remove();
+      map.remove();
     };
   }, []);
 
+  // Resize map when switched to map view
   useEffect(() => {
-    if (initialLocation) {
-      setAddress(initialLocation.address);
-      if (initialLocation.coordinates) {
-        // Mock translate lat/lng (near Guwahati coordinates) to canvas 0-100
-        // lat is 26.15-26.18, lng is 91.75-91.79
-        const lat = initialLocation.coordinates.lat;
-        const lng = initialLocation.coordinates.lng;
-        const x = Math.max(10, Math.min(90, ((lng - 91.75) / 0.04) * 100));
-        const y = Math.max(10, Math.min(90, (1 - (lat - 26.15) / 0.03) * 100));
-        setMarkerPos({ x, y });
+    if (locType === 'map' && mapRef.current) {
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 50);
+    }
+  }, [locType]);
+
+  // Update user selection marker position on map when state changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (locType === 'map' && markerPos) {
+      if (!userMarkerRef.current) {
+        const el = document.createElement('div');
+        el.className = 'user-map-pin';
+        el.style.width = '32px';
+        el.style.height = '32px';
+        el.style.cursor = 'grab';
+        el.innerHTML = `
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="#EF4444" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3" fill="#FFFFFF"></circle>
+          </svg>
+        `;
+
+        const marker = new maplibregl.Marker({ element: el, draggable: true })
+          .setLngLat([markerPos.lng, markerPos.lat])
+          .addTo(map);
+
+        marker.on('dragend', async () => {
+          const lngLat = marker.getLngLat();
+          setMarkerPos({ lat: lngLat.lat, lng: lngLat.lng });
+
+          // Reverse Geocode
+          const realAddress = await fetchReverseGeocode(lngLat.lat, lngLat.lng);
+          const resolvedAddress = realAddress || getFallbackAddress(lngLat.lat, lngLat.lng, selectedDistrict, language);
+          setAddress(resolvedAddress);
+          onLocationSelect({
+            type: 'map',
+            address: resolvedAddress,
+            district: selectedDistrict,
+            coordinates: { lat: lngLat.lat, lng: lngLat.lng }
+          });
+        });
+
+        userMarkerRef.current = marker;
+      } else {
+        userMarkerRef.current.setLngLat([markerPos.lng, markerPos.lat]);
+      }
+    } else {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+    }
+  }, [locType, markerPos]);
+
+  // Center map on district select
+  useEffect(() => {
+    if (mapRef.current) {
+      const center = getDistrictCoordinates(selectedDistrict);
+      mapRef.current.flyTo({ center: [center[0], center[1]], zoom: 12 });
+      setMarkerPos({ lat: center[1], lng: center[0] });
+    }
+  }, [selectedDistrict]);
+
+  // Track initial location selection updates
+  useEffect(() => {
+    if (initialLocation && initialLocation.coordinates) {
+      setMarkerPos({
+        lat: initialLocation.coordinates.lat,
+        lng: initialLocation.coordinates.lng
+      });
+      if (mapRef.current) {
+        mapRef.current.flyTo({
+          center: [initialLocation.coordinates.lng, initialLocation.coordinates.lat],
+          zoom: 13
+        });
       }
     }
   }, [initialLocation]);
 
-  // Request browser geolocation
+  // Plot complaints and clusters on the map
+  const plotComplaintMarkers = (map: maplibregl.Map, zoom: number) => {
+    // Clear old markers
+    otherMarkersRef.current.forEach(m => m.remove());
+    otherMarkersRef.current = [];
+
+    // Filter complaints matching this district
+    const districtComplaints = allComplaints.filter(
+      c => c.location?.district === selectedDistrict
+    );
+
+    const clusters = getClusters(districtComplaints, zoom);
+
+    clusters.forEach(cluster => {
+      const el = document.createElement('div');
+      
+      if (cluster.points.length > 1) {
+        // Cluster marker
+        el.className = 'map-cluster-marker';
+        el.style.width = '36px';
+        el.style.height = '36px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#5F3E2B';
+        el.style.color = '#FFFFFF';
+        el.style.border = '2.5px solid #FFFFFF';
+        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '0.85rem';
+        el.style.cursor = 'pointer';
+        el.innerText = cluster.points.length.toString();
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([cluster.lng, cluster.lat])
+          .addTo(map);
+
+        el.addEventListener('click', () => {
+          map.flyTo({
+            center: [cluster.lng, cluster.lat],
+            zoom: map.getZoom() + 2
+          });
+        });
+
+        otherMarkersRef.current.push(marker);
+      } else {
+        // Individual marker
+        const comp = cluster.points[0];
+        el.className = 'map-complaint-marker';
+        el.style.width = '20px';
+        el.style.height = '20px';
+        el.style.borderRadius = '50%';
+
+        let color = '#EAB308'; // Yellow: Under Review
+        if (comp.status === 'Resolved') {
+          color = '#22C55E'; // Green: Resolved
+        } else if (comp.status === 'Needs Attention' || (comp.severity && comp.severity.toLowerCase().includes('safety'))) {
+          color = '#EF4444'; // Red: Urgent / High reports
+        }
+
+        el.style.backgroundColor = color;
+        el.style.border = '2.5px solid #FFFFFF';
+        el.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        el.style.cursor = 'pointer';
+
+        // Styled Popup Content Card matching design
+        const popupDiv = document.createElement('div');
+        popupDiv.style.fontFamily = 'Poppins, sans-serif';
+        popupDiv.style.fontSize = '0.8rem';
+        popupDiv.style.color = '#333333';
+        popupDiv.style.padding = '0.4rem';
+        popupDiv.style.maxWidth = '220px';
+
+        popupDiv.innerHTML = `
+          <div style="font-weight: 700; color: #5F3E2B; margin-bottom: 0.2rem; font-family: Montserrat, sans-serif; font-size: 0.9rem;">
+            ${comp.subcategory || comp.category}
+          </div>
+          <div style="margin-bottom: 0.2rem; color: #666666;">
+            <strong>Location:</strong> ${comp.location?.address.split(',')[0]}
+          </div>
+          <div style="margin-bottom: 0.2rem; color: #666666;">
+            <strong>Reports:</strong> ${comp.affectedCitizenCount || 1} citizens
+          </div>
+          <div style="margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.3rem;">
+            <strong>Status:</strong> 
+            <span style="background-color: ${color}22; color: ${color}; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.75rem;">
+              ${comp.status}
+            </span>
+          </div>
+          <div style="color: #666666;">
+            <strong>Reported:</strong> ${comp.dateSubmitted}
+          </div>
+        `;
+
+        const popup = new maplibregl.Popup({ offset: 15 }).setDOMContent(popupDiv);
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([cluster.lng, cluster.lat])
+          .setPopup(popup)
+          .addTo(map);
+
+        otherMarkersRef.current.push(marker);
+      }
+    });
+  };
+
+  // Reverse Geocoding via Nominatim API
+  const fetchReverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.display_name) {
+          return data.display_name;
+        }
+      }
+    } catch (err) {
+      console.warn("Reverse geocode request failed:", err);
+    }
+    return null;
+  };
+
+  // Browser Geolocation
   const handleUseCurrentLocation = () => {
     setLoadingGeo(true);
     setGeoError(null);
@@ -317,25 +433,30 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        const resolvedState = getStateForDistrict(selectedDistrict);
-        const mockAddress = language === 'hi'
-          ? `वार्ड नंबर 7, स्थानीय बाजार के पास, ${selectedDistrict}, ${resolvedState} (वर्तमान निर्देशांक: ${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
-          : `Ward No. 7, near Local Market, ${selectedDistrict}, ${resolvedState} (Current Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
-        setAddress(mockAddress);
-        setMarkerPos({ x: 45, y: 55 }); // Pick a center spot on mock map
+        setMarkerPos({ lat: latitude, lng: longitude });
+
+        const realAddress = await fetchReverseGeocode(latitude, longitude);
+        const resolvedAddress = realAddress || getFallbackAddress(latitude, longitude, selectedDistrict, language);
+
+        setAddress(resolvedAddress);
         setLoadingGeo(false);
+
+        if (mapRef.current) {
+          mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14 });
+        }
+
         onLocationSelect({
           type: 'current',
-          address: mockAddress,
+          address: resolvedAddress,
           district: selectedDistrict,
           coordinates: { lat: latitude, lng: longitude }
         });
       },
       (error) => {
         console.warn("Geolocation permission denied:", error);
-        setGeoError("Location access isn't available. Please search or enter address manually.");
+        setGeoError("Location access isn't available. Please search or select on the map.");
         setLoadingGeo(false);
         setLocType('manual');
       },
@@ -343,82 +464,72 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     );
   };
 
-  // Mock Geolocation on page load if type is current
   useEffect(() => {
     if (locType === 'current' && !address) {
       handleUseCurrentLocation();
     }
   }, [locType]);
 
-  // Search Landmarks
-  const handleSearch = (e: React.FormEvent) => {
+  // Geocoding Search via Nominatim API
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
-    const query = searchQuery.toLowerCase();
-    const matches = activeLandmarks.filter(
-      l => l.name.toLowerCase().includes(query) || l.address.toLowerCase().includes(query)
+    setSearching(true);
+    setSearchResults([]);
+
+    try {
+      const query = `${searchQuery}, ${selectedDistrict}, ${getStateForDistrict(selectedDistrict)}`;
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const results = data.map(item => ({
+            name: item.name || item.display_name.split(',')[0],
+            address: item.display_name,
+            lat: parseFloat(item.lat),
+            lng: parseFloat(item.lon)
+          }));
+          setSearchResults(results);
+          setSearching(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Search request failed:", err);
+    }
+
+    // Local Fallback search if geocoding yields no results
+    const localMatches = [
+      { name: 'ABC School', lat: 26.1754, lng: 91.7761, address: 'Near ABC School, R.G. Baruah Road, Guwahati, Assam' },
+      { name: 'ABC Market', lat: 26.1534, lng: 91.7820, address: 'ABC Market Entrance, G.S. Road, Guwahati, Assam' },
+      { name: 'Guwahati High Court', lat: 26.1950, lng: 91.7450, address: 'MG Road, Latasil, Guwahati, Assam' },
+      { name: 'Guwahati Railway Station', lat: 26.1820, lng: 91.7520, address: 'Station Road, Paltan Bazaar, Guwahati, Assam' },
+      { name: 'State Zoo', lat: 26.1680, lng: 91.7800, address: 'Zoo Road Main Entrance, Guwahati, Assam' }
+    ].filter(
+      l => l.name.toLowerCase().includes(searchQuery.toLowerCase()) || l.address.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    setSearchResults(matches);
+    setSearchResults(localMatches);
+    setSearching(false);
   };
 
-  const handleSelectSearchResult = (landmark: Landmark) => {
-    // Translate coord coordinates
-    setMarkerPos({ x: (landmark.x / 400) * 100, y: (landmark.y / 400) * 100 });
+  const handleSelectSearchResult = (landmark: any) => {
+    setMarkerPos({ lat: landmark.lat, lng: landmark.lng });
     setAddress(landmark.address);
     setSearchQuery('');
     setSearchResults([]);
+
+    if (mapRef.current) {
+      mapRef.current.flyTo({ center: [landmark.lng, landmark.lat], zoom: 14 });
+    }
+
     onLocationSelect({
       type: 'search',
       address: landmark.address,
       district: selectedDistrict,
-      coordinates: { 
-        lat: 26.15 + (1 - landmark.y / 400) * 0.03, 
-        lng: 91.75 + (landmark.x / 400) * 0.04 
-      }
-    });
-  };
-
-
-
-  // Calculate nearest address on mock map coordinate click
-  const findNearestAddress = (pctX: number, pctY: number) => {
-    const canvasX = (pctX / 100) * 400;
-    const canvasY = (pctY / 100) * 400;
-
-    let closest: Landmark = activeLandmarks[0];
-    let minDist = Infinity;
-
-    activeLandmarks.forEach(l => {
-      const dist = Math.sqrt(Math.pow(l.x - canvasX, 2) + Math.pow(l.y - canvasY, 2));
-      if (dist < minDist) {
-        minDist = dist;
-        closest = l;
-      }
-    });
-
-    let calculatedAddress = '';
-    const resolvedState = getStateForDistrict(selectedDistrict);
-    if (minDist < 60) {
-      // Very close to a landmark
-      calculatedAddress = closest.address;
-    } else {
-      // General coordinate address
-      calculatedAddress = language === 'hi'
-        ? `निर्देशांक (${pctX.toFixed(0)}, ${pctY.toFixed(0)}) के पास स्ट्रीट ब्लॉक, ${districtMapData.roads[2].name}, ${selectedDistrict}, ${resolvedState}`
-        : `Street block near coordinates (${pctX.toFixed(0)}, ${pctY.toFixed(0)}), ${districtMapData.roads[2].name}, ${selectedDistrict}, ${resolvedState}`;
-    }
-
-    setAddress(calculatedAddress);
-    onLocationSelect({
-      type: 'map',
-      address: calculatedAddress,
-      district: selectedDistrict,
-      coordinates: { 
-        lat: 26.15 + (1 - pctY / 100) * 0.03, 
-        lng: 91.75 + (pctX / 100) * 0.04 
-      }
+      coordinates: { lat: landmark.lat, lng: landmark.lng }
     });
   };
 
@@ -475,7 +586,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         ))}
       </div>
 
-      {/* Content based on selected locType */}
+      {/* Content card */}
       <div style={{ 
         backgroundColor: '#FFFFFF', 
         border: '1px solid var(--color-border)', 
@@ -542,8 +653,9 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 type="submit" 
                 className="btn-primary" 
                 style={{ borderRadius: '6px', padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                disabled={searching}
               >
-                <Search size={16} />
+                {searching ? '...' : <Search size={16} />}
               </button>
             </form>
 
@@ -554,7 +666,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 </span>
                 {searchResults.map(l => (
                   <button
-                    key={l.name}
+                    key={l.address}
                     type="button"
                     onClick={() => handleSelectSearchResult(l)}
                     style={{
@@ -574,176 +686,84 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                     onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     <MapPin size={16} style={{ color: 'var(--color-primary)' }} />
-                    <div>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <strong style={{ display: 'block', color: 'var(--color-text-main)' }}>{l.name}</strong>
                       <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{l.address}</span>
                     </div>
                   </button>
                 ))}
               </div>
-            ) : searchQuery && (
+            ) : searchQuery && !searching && (
               <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', padding: '0.5rem 0' }}>
                 {language === 'hi'
-                  ? 'कोई लैंडमार्क नहीं मिला। "ABC Market" या "ABC School" खोजने का प्रयास करें।'
-                  : 'No landmarks found. Try searching "ABC Market", "ABC School", or "Zoo Road".'}
+                  ? 'कोई स्थान नहीं मिला। स्थान का नाम पुनः जांचें।'
+                  : 'No matching location found. Please refine your query.'}
               </div>
             )}
           </div>
         )}
 
-        {locType === 'map' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
-                <span>{selectedDistrict} {language === 'hi' ? 'जिला' : 'District'}</span>
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => {
-                    const newDist = e.target.value;
-                    const resolvedState = getStateForDistrict(newDist);
-                    setSelectedDistrict(newDist);
-                    // Update address with new district if it is coordinate based
-                    let updatedAddress = address;
-                    if (address.includes('coordinates') || address.includes('निर्देशांक')) {
-                      updatedAddress = language === 'hi'
-                        ? `निर्देशांक (${markerPos.x.toFixed(0)}, ${markerPos.y.toFixed(0)}) के पास स्ट्रीट ब्लॉक, ${districtMapData.roads[2].name}, ${newDist}, ${resolvedState}`
-                        : `Street block near coordinates (${markerPos.x.toFixed(0)}, ${markerPos.y.toFixed(0)}), ${districtMapData.roads[2].name}, ${newDist}, ${resolvedState}`;
-                      setAddress(updatedAddress);
-                    }
-                    onLocationSelect({
-                      type: 'map',
-                      address: updatedAddress,
-                      district: newDist,
-                      coordinates: {
-                        lat: 26.15 + (1 - markerPos.y / 100) * 0.03,
-                        lng: 91.75 + (markerPos.x / 100) * 0.04
-                      }
-                    });
-                  }}
-                  style={{
-                    backgroundColor: 'rgba(95, 62, 43, 0.1)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '4px',
-                    padding: '0.1rem 0.3rem',
-                    fontSize: '0.7rem',
-                    color: 'var(--color-primary)',
-                    fontWeight: 600,
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {(STATES_AND_DISTRICTS[getStateForDistrict(district)] || STATES_AND_DISTRICTS['Assam']).map(d => (
-                    <option key={d} value={d} style={{ color: '#000000' }}>{d}</option>
-                  ))}
-                </select>
-              </div>
-              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                {language === 'hi' ? 'मार्कर लगाने के लिए मानचित्र पर क्लिक करें' : 'CLICK ON MAP TO PLACE MARKER'}
-              </span>
-            </div>
-
-            {/* SVG Interactive Mock Map Canvas */}
-            <div 
-              ref={mapContainerRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{
-                width: '100%',
-                height: '200px',
-                position: 'relative',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border)',
-                backgroundColor: '#FAF5F0',
-                cursor: 'crosshair',
-                overflow: 'hidden',
-                userSelect: 'none'
-              }}
-            >
-              {/* Grid backdrop */}
-              <svg width="100%" height="100%">
-                <defs>
-                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(95, 62, 43, 0.05)" strokeWidth="1" />
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-
-                {/* River */}
-                <path 
-                  d={districtMapData.riverPath} 
-                  fill="none" 
-                  stroke={districtMapData.riverColor} 
-                  strokeWidth="20" 
-                  opacity="0.25"
-                  strokeLinecap="round"
-                />
-                <text x={districtMapData.riverTextX} y={districtMapData.riverTextY} fill="var(--color-primary)" fontSize="8" fontWeight="bold" opacity="0.6" fontStyle="italic">
-                  {districtMapData.river}
-                </text>
-
-                {/* Roads */}
-                {districtMapData.roads.map(r => (
-                  <g key={r.name}>
-                    <line x1={`${r.x1}%`} y1={`${r.y1}%`} x2={`${r.x2}%`} y2={`${r.y2}%`} stroke="rgba(95, 62, 43, 0.15)" strokeWidth="12" strokeLinecap="round" />
-                    <line x1={`${r.x1}%`} y1={`${r.y1}%`} x2={`${r.x2}%`} y2={`${r.y2}%`} stroke="#FFFFFF" strokeWidth="2" strokeDasharray="5,5" strokeLinecap="round" />
-                    <text 
-                      x={`${r.textX}%`} 
-                      y={`${r.textY}%`} 
-                      fill="var(--color-text-muted)" 
-                      fontSize="7" 
-                      fontWeight="bold" 
-                      transform={`rotate(${r.rotate}, ${r.textX}%, ${r.textY}%)`}
-                      opacity="0.8"
-                    >
-                      {r.name}
-                    </text>
-                  </g>
+        {/* Map Tab View (Always mounted, display state controlled dynamically) */}
+        <div style={{ display: locType === 'map' ? 'block' : 'none' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+              <span>{selectedDistrict} {language === 'hi' ? 'जिला' : 'District'}</span>
+              <select
+                value={selectedDistrict}
+                onChange={(e) => {
+                  setSelectedDistrict(e.target.value);
+                }}
+                style={{
+                  backgroundColor: 'rgba(95, 62, 43, 0.1)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '4px',
+                  padding: '0.1rem 0.3rem',
+                  fontSize: '0.7rem',
+                  color: 'var(--color-primary)',
+                  fontWeight: 600,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                {(STATES_AND_DISTRICTS[getStateForDistrict(district)] || STATES_AND_DISTRICTS['Assam']).map(d => (
+                  <option key={d} value={d} style={{ color: '#000000' }}>{d}</option>
                 ))}
-
-                {/* Landmarks */}
-                {activeLandmarks.map(l => (
-                  <g key={l.name}>
-                    <circle cx={l.x} cy={l.y} r="2" fill="var(--color-primary)" />
-                    <text x={l.x + 6} y={l.y + 3} fill="var(--color-primary)" fontSize="7" fontWeight="bold" opacity="0.7">
-                      {l.name}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-
-              {/* Draggable marker pinning */}
-              <div style={{
-                position: 'absolute',
-                left: `${markerPos.x}%`,
-                top: `${markerPos.y}%`,
-                transform: 'translate(-50%, -100%)',
-                pointerEvents: 'none',
-                transition: 'left 0.2s, top 0.2s'
-              }}>
-                <MapPin size={32} style={{ color: '#EF4444', fill: 'rgba(239, 68, 68, 0.2)' }} />
-              </div>
+              </select>
             </div>
-            
-            {/* Show mapped address */}
-            {address && (
-              <div style={{ 
-                marginTop: '0.8rem', 
-                backgroundColor: '#F8FAFC', 
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                padding: '0.6rem',
-                fontSize: '0.8rem',
-                color: 'var(--color-text-main)'
-              }}>
-                <strong>{language === 'hi' ? 'पिन किया गया पता:' : 'Pinned Address:'}</strong> {address}
-              </div>
-            )}
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>
+              {language === 'hi' ? 'मानचित्र पर स्थान पिन करें' : 'SELECT COMPLAINT LOCATION'}
+            </span>
           </div>
-        )}
+
+          {/* Real Interactive Map Canvas */}
+          <div 
+            ref={mapContainerRef}
+            style={{
+              width: '100%',
+              height: '250px',
+              position: 'relative',
+              borderRadius: '8px',
+              border: '1px solid var(--color-border)',
+              backgroundColor: '#FAF5F0',
+              overflow: 'hidden'
+            }}
+          />
+          
+          {/* Show mapped address */}
+          {address && (
+            <div style={{ 
+              marginTop: '0.8rem', 
+              backgroundColor: '#F8FAFC', 
+              border: '1px solid var(--color-border)',
+              borderRadius: '6px',
+              padding: '0.6rem',
+              fontSize: '0.8rem',
+              color: 'var(--color-text-main)'
+            }}>
+              <strong>{language === 'hi' ? 'पिन किया गया पता:' : 'Selected Location:'}</strong> {address}
+            </div>
+          )}
+        </div>
 
         {locType === 'manual' && (
           <div>
@@ -772,6 +792,19 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        .user-map-pin {
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+        }
+        .map-cluster-marker:hover {
+          transform: scale(1.15) !important;
+        }
+        .map-complaint-marker:hover {
+          transform: scale(1.25) !important;
+        }
+        .maplibregl-popup-close-button {
+          padding: 2px 6px;
+          font-size: 1.1rem;
         }
       `}</style>
     </div>
